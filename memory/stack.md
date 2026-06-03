@@ -11,7 +11,7 @@
 | Splunk Integration | Splunk MCP Server (official) | 1.1 |
 | MCP Client | `langchain-mcp-adapters` | latest |
 | GitHub Integration | PyGithub | latest |
-| LLM Client | LangChain Google GenAI (Gemini Flash) | latest |
+| LLM Client | LangChain Google GenAI (Gemini 3.1 Flash Lite) | latest |
 
 ## Frontend (UI of Thinking)
 
@@ -26,7 +26,7 @@
 
 | Component | Choice |
 |---|---|
-| Splunk Instance | Local Docker (Splunk Enterprise, free dev license) |
+| Splunk Instance | Local Splunk Enterprise (500MB trial → 10GB pending) |
 | Dev Environment | Python venv |
 | Demo Hosting | Local + ngrok (for webhook demo if needed) |
 
@@ -37,7 +37,7 @@
 SPLUNK_HOST=localhost
 SPLUNK_PORT=8089
 SPLUNK_TOKEN=your_admin_token_here
-SPLUNK_MCP_URL=http://localhost:8088/mcp
+SPLUNK_MCP_URL=https://localhost:8089/services/mcp
 
 # GitHub
 GITHUB_TOKEN=ghp_your_personal_access_token
@@ -46,7 +46,7 @@ GITHUB_BRANCH_PREFIX=splunk-zero
 
 # LLM
 GOOGLE_API_KEY=your_gemini_api_key
-LLM_MODEL=gemini-2.0-flash
+LLM_MODEL=gemini-3.1-flash-lite
 
 # App
 APP_PORT=8000
