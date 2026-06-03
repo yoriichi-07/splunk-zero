@@ -3,4 +3,21 @@ planning/demo-script.md
 resources/
 planning/judging-alignment.md
 
+# Secrets
+.env
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Demo files (not part of submission)
+demo-repo-files/
