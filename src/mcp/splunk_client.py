@@ -12,6 +12,7 @@ import json
 import httpx
 from typing import Optional
 from contextlib import asynccontextmanager
+from functools import partial
 
 # Try MCP SDK first, fallback to REST
 try:
@@ -71,16 +72,14 @@ class SplunkMCPClient:
         if not HAS_MCP_SDK:
             raise RuntimeError("MCP SDK not installed. pip install mcp")
 
-        # Create custom SSL context that doesn't verify (local dev)
-        ssl_context = ssl.create_default_context()
-        if not self.verify_ssl:
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
+        # Custom httpx client factory that skips SSL verification (local dev)
+        def _no_verify_client_factory(**kwargs):
+            return httpx.AsyncClient(verify=False, **kwargs)
 
         async with sse_client(
             url=self.mcp_url,
             headers=self.mcp_headers,
-            ssl_context=ssl_context,
+            httpx_client_factory=_no_verify_client_factory,
         ) as (read_stream, write_stream):
             async with ClientSession(read_stream, write_stream) as session:
                 await session.initialize()
@@ -134,7 +133,7 @@ class SplunkMCPClient:
     ) -> dict:
         """Execute SPL query via Splunk REST API (fallback)."""
         url = f"{self.base_url}/services/search/jobs/export"
-        params = {
+        data = {
             "search": f"search {spl_query}" if not spl_query.strip().startswith("|") else spl_query,
             "earliest_time": earliest_time,
             "latest_time": latest_time,
@@ -142,9 +141,9 @@ class SplunkMCPClient:
             "count": max_results,
         }
         async with httpx.AsyncClient(verify=self.verify_ssl) as client:
-            response = await client.get(
+            response = await client.post(
                 url,
-                params=params,
+                data=data,
                 auth=self.rest_auth,
                 timeout=120,
             )
