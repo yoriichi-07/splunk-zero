@@ -9,14 +9,14 @@
 **Goal:** Prove that the core tools work. No application logic yet — just connectivity.
 
 - [x] Splunk Enterprise running locally (500MB license, upgrade to 10GB pending)
-- [ ] MCP Server app installed on Splunk instance
-- [ ] MCP client connects and can call `list_indexes`
-- [ ] SPL query to `_internal` returns ingest metrics
-- [ ] SPL query to `_audit` returns search activity data
-- [ ] GitHub API can read a test repo's files
-- [ ] GitHub API can create a branch + PR on test repo
+- [x] MCP Server app installed on Splunk instance
+- [ ] MCP client connects via SSE protocol (TaskGroup error — debugging needed)
+- [x] SPL query to `_internal` returns ingest metrics (via REST API fallback)
+- [x] SPL query to `_audit` returns search activity data (via REST API fallback)
+- [x] GitHub API can read a test repo's files
+- [x] GitHub API can create a branch + PR on test repo
 - [ ] FastAPI server starts and serves a basic health endpoint
-- [ ] `.env` file created with all required keys
+- [x] `.env` file created with all required keys
 - [ ] Synthetic demo data loaded into Splunk (realistic log sources)
 
 **Definition of Done:** Run a script that queries Splunk MCP for ingest data, cross-references audit data, and prints "wasteful sources" to terminal. Separately, create a test PR on GitHub.
