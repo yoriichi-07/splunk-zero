@@ -1,12 +1,12 @@
 # Conversation Handoff — Splunk Zero Hackathon Project
 
-> **Purpose:** This file captures EVERYTHING from the initial conversation (da6ef238-694e-4705-8e0c-4bddd688bf6b) so a new agent can continue seamlessly. Read this FIRST before doing anything.
+> **Purpose:** This file captures EVERYTHING from the project so a new agent can continue seamlessly. Read this FIRST before doing anything.
 
 ---
 
 ## 1. What Is This Project?
 
-**Splunk Zero** ("Zero noise. Zero waste. Zero unused data.") is an autonomous AI agent being built for the **Splunk Agentic Ops Hackathon** (deadline: **June 15, 2026** — 11 days remain as of June 4).
+**Splunk Zero** ("Zero noise. Zero waste. Zero unused data.") is an autonomous AI agent being built for the **Splunk Agentic Ops Hackathon** (deadline: **June 15, 2026** — 10 days remain as of June 5).
 
 **What it does:** A webhook triggers the agent. It queries Splunk's internal indexes to find log sources consuming high volume that nobody searches for, traces those sources to a GitHub repo, and creates a Pull Request to reduce the logging level — with dollar cost savings in the PR description.
 
@@ -18,205 +18,161 @@
 
 **Root directory:** `d:\intel\splunk\splunk hack\splunk-zero\`
 
-> **IMPORTANT:** The project was originally at `d:\intel\splunk\splunk hack\` but was moved by the user to `d:\intel\splunk\splunk hack\splunk-zero\`. All paths are relative to this root.
-
 ```
 splunk-zero/
 ├── .env                    # Real credentials (gitignored)
 ├── .env.example            # Template for .env
-├── .gitignore              # Ignores .env, __pycache__, etc.
-├── requirements.txt        # Python dependencies
+├── .gitignore
+├── requirements.txt
 │
 ├── src/
 │   ├── __init__.py
-│   ├── config.py           # Central config loader from .env
+│   ├── config.py           # Central config (HEC, REST, GitHub, LLM, app settings)
+│   ├── server.py           # FastAPI server (/health, /trigger, /events/{run_id}, /)
 │   ├── mcp/
 │   │   ├── __init__.py
-│   │   └── splunk_client.py  # Splunk MCP + REST API client (dual-mode)
+│   │   └── splunk_client.py  # Splunk MCP + REST API client (dual-mode, REST used)
 │   ├── github/
-│   │   └── __init__.py     # Placeholder (Phase 2)
+│   │   ├── __init__.py
+│   │   └── client.py        # GitHub API wrapper (search, read, branch, commit, PR)
 │   ├── agent/
 │   │   ├── __init__.py
+│   │   ├── state.py          # SplunkZeroState TypedDict (LangGraph schema)
+│   │   ├── graph.py          # LangGraph workflow (7 nodes, conditional edge)
 │   │   └── nodes/
-│   │       └── __init__.py # Placeholder (Phase 2)
+│   │       ├── __init__.py
+│   │       ├── ingest_analysis.py   # Node 1: Query _internal for volume
+│   │       ├── search_audit.py      # Node 2: Query _audit for search activity
+│   │       ├── waste_detection.py   # Node 3: Cross-reference → find waste
+│   │       ├── source_tracing.py    # Node 4: Map sourcetype → repo (LLM)
+│   │       ├── code_analysis.py     # Node 5: Read config, propose changes (LLM)
+│   │       ├── pr_creation.py       # Node 6: Create branch, commit, open PR
+│   │       └── report.py           # Node 7: Compile final report
 │   └── ui/
-│       └── __init__.py     # Placeholder (Phase 3)
+│       ├── __init__.py
+│       ├── events.py         # SSE EventManager (async queue-based)
+│       └── static/
+│           └── index.html    # Placeholder UI (Phase 3)
+│
+├── scripts/
+│   ├── __init__.py
+│   ├── synthetic_data.py     # HEC data loader (3 sourcetypes, 1900 events)
+│   ├── quick_test.py         # Quick trigger/health check
+│   └── debug_sse.py          # SSE stream debug tool
 │
 ├── tests/
 │   ├── __init__.py
-│   ├── test_mcp_connection.py   # Splunk connectivity test (PASSING)
-│   ├── test_github_connection.py # GitHub connectivity test (PASSING)
-│   └── test_llm_connection.py   # LLM connection test (PASSING)
+│   ├── test_mcp_connection.py
+│   ├── test_github_connection.py
+│   ├── test_llm_connection.py
+│   └── test_pipeline.py      # Full E2E pipeline test
 │
-├── planning/               # Strategy documents
-│   ├── README.md           # Master entry point
-│   ├── architecture.md     # System design, state schema, SPL queries
-│   ├── decisions.md        # 8 locked technical decisions
-│   ├── milestones.md       # 4-phase plan with checkboxes
-│   ├── demo-script.md      # 90-second demo flow (gitignored)
-│   └── judging-alignment.md # Judging criteria mapping (gitignored)
+├── planning/
+│   ├── architecture.md
+│   ├── decisions.md
+│   ├── milestones.md
+│   ├── demo-script.md
+│   └── judging-alignment.md
 │
-├── memory/                 # Living state
-│   ├── handoff.md          # THIS FILE — conversation continuation context
-│   ├── progress.md         # Current status, blockers, next steps
-│   └── stack.md            # Locked tech stack, env vars, dependencies
+├── memory/
+│   ├── handoff.md            # THIS FILE
+│   ├── progress.md           # Current status
+│   └── stack.md              # Tech stack details
 │
-├── hackathon-context/      # Original hackathon materials (gitignored)
-└── resources/              # Reference links (gitignored)
+└── hackathon-context/        # Original hackathon materials
 ```
 
 ---
 
-## 3. What Has Been Accomplished
+## 3. Current Status: Phase 2 COMPLETE ✓
 
-### Phase 1 Progress: 7/10 items complete
+### What Works End-to-End:
 
-| Item | Status | Details |
-|---|---|---|
-| Splunk Enterprise running | DONE | v10.4.0, Windows, localhost:8089, 500MB license (10GB upgrade pending) |
-| MCP Server installed | DONE | Active, endpoints visible at `https://localhost:8089/services/mcp` |
-| MCP SSE connection | BLOCKED | `sse_client` throws TaskGroup error. REST fallback works fine. |
-| _internal index queries | DONE | Via REST API. Returns 10+ sourcetypes with ingest volumes. |
-| _audit index queries | DONE | Via REST API. Returns user search activity. |
-| GitHub read access | DONE | Can read repo files, found logging.conf. |
-| GitHub write access | DONE | Can create/delete branches. |
-| FastAPI server | NOT STARTED | Skeleton exists but no server code yet. |
-| .env configured | DONE | All keys set: Splunk, GitHub, Gemini. |
-| Synthetic demo data | NOT STARTED | Need realistic log sources for demo. |
+1. **POST /trigger** → starts agent pipeline in background, returns `run_id`
+2. **GET /events/{run_id}** → SSE stream of real-time events
+3. **Pipeline flow:**
+   - Node 1: Queries Splunk _internal → finds 32 sourcetypes
+   - Node 2: Queries Splunk _audit → finds search activity
+   - Node 3: Cross-references → detects 10 wasteful sourcetypes ($26,522/month)
+   - Node 4: Maps sourcetypes to GitHub repos (configured + LLM fallback)
+   - Node 5: Reads logging.conf, LLM proposes DEBUG→ERROR change
+   - Node 6: Creates branch, commits modified config, opens PR
+   - Node 7: Compiles final report
 
-### Connection Test Results (June 4, 2026)
+### Verified Results (June 5, 2026):
 
-**Splunk REST API — ALL PASSING:**
-```
-Server: Shree_, Version: 10.4.0, OS: Windows
-Indexes: _internal (390K events, 35MB), _audit (41K events, 4MB), main (empty)
-_internal query: kvstore 0.44 GB/day, splunkd 0.04 GB/day, + 8 more
-_audit query: splunk-system-user 109 searches, yoriichi 1 search
-```
+- **10 wasteful sourcetypes detected** (3 synthetic + 7 Splunk internal with ":" format)
+- **$26,522.38/month estimated savings**
+- **2 real GitHub PRs created:**
+  - PR #1: `[Splunk Zero] Reduce app:user-auth:debug logging: DEBUG -> ERROR`
+  - PR #2: `[Splunk Zero] Reduce app:payment-service:debug logging: DEBUG -> ERROR`
+- **2 branches created** on yoriichi-07/splunk-zero-demo-app
 
-**GitHub — ALL PASSING:**
-```
-User: yoriichi-07
-Repo: yoriichi-07/splunk-zero-demo-app (main branch)
-Files: README.md, logging.conf, src/
-Write: Branch create/delete works
-```
-
-**MCP SSE — FAILING (non-blocking):**
-```
-Error: "unhandled errors in a TaskGroup (1 sub-exception)"
-Fixed ssl_context issue (use httpx_client_factory instead)
-Remaining issue is likely Splunk MCP Server's SSE implementation
-```
+### Server Details:
+- **App URL:** http://localhost:8888 (NOT 8000 — Splunk Web uses 8000)
+- **Start command:** `python -m src.server`
+- **Health check:** GET /health returns Splunk status + config validation
 
 ---
 
 ## 4. Critical Technical Discoveries
 
-These are hard-won lessons from debugging. Don't re-learn them:
+These are hard-won lessons. Don't re-learn them:
 
-1. **Splunk has TWO completely separate auth systems:**
-   - **MCP Encrypted Token** (created in MCP Server app) → for MCP protocol only
-   - **Basic auth (username/password)** → for REST API (`/services/*`)
-   - Using the MCP token with REST API gives 401 Unauthorized
-
-2. **Splunk REST search endpoint needs POST, not GET:**
-   - `POST /services/search/jobs/export` with form-encoded data
-   - GET returns 405 Method Not Allowed
-
-3. **MCP Python SDK v1.13.1 `sse_client` API:**
-   - Does NOT accept `ssl_context` parameter
-   - Use `httpx_client_factory` parameter instead for SSL bypass
-   - Signature: `(url, headers, timeout, sse_read_timeout, httpx_client_factory, auth)`
-
-4. **Windows console encoding (cp1252) breaks on emoji:**
-   - Never use emoji (checkmarks, warning signs) in print statements
-   - Use ASCII markers: `[OK]`, `[FAIL]`, `[WARN]`
-   - Do NOT use `io.TextIOWrapper` to fix it — crashes on PowerShell
-
-5. **GITHUB_REPO format:** Must be `owner/repo` (e.g., `yoriichi-07/splunk-zero-demo-app`), not the full URL
-
-6. **LLM Integration:**
-   - Working with `gemini-3.1-flash-lite` (or other Gemini models) via Google AI Studio.
-   - The `.env` has `GOOGLE_API_KEY` set, and we use `langchain-google-genai`.
+1. **Splunk has TWO separate auth systems:** MCP Encrypted Token (MCP only) vs Basic auth (REST API)
+2. **Splunk REST search needs POST**, not GET (returns 405 on GET)
+3. **MCP SSE is broken** — `sse_client` throws TaskGroup error. REST fallback works perfectly.
+4. **Windows console (cp1252) breaks on emoji** — Use ASCII markers: `[OK]`, `[FAIL]`, `[WARN]`
+5. **GITHUB_REPO format:** Must be `owner/repo`, not full URL
+6. **Splunk Web uses port 8000** — Our app runs on port 8888
+7. **Gemini `response.content` can be a list** — Must check `isinstance(content, list)` before `.strip()`
+8. **LangGraph `Annotated[list, add]`** — enables append-only event accumulation across nodes
+9. **Waste detection needs dual-pass:** (1) high-volume + low-search, (2) any-volume + zero-search for app sourcetypes
+10. **sse-starlette format:** `data: ` prefix on each line, with `\r\n\r\n` separators
 
 ---
 
-## 5. User Preferences and Constraints
+## 5. What's Next: Phase 3 — UI of Thinking
 
-- **"I value planning more than anything"** — Always plan before building
-- **"Don't overcomplicate for simple stuff"** — Keep it practical, hackathon-focused
-- **"Take the prompt with a pinch of salt"** — The original Claude prompt was overly complex; we trimmed 20 files to 8
-- **"Don't expect to build in one go"** — Phase-based, incremental delivery
-- **Splunk license:** 500MB currently, 10GB coming. Keep demo data small.
-- **LLM credits:** Limited. Use the cheapest model that works (like `gemini-3.1-flash-lite`).
-- **GitHub user:** `yoriichi-07`
-- **Splunk server name:** `Shree_`
+### Design:
+- Dark glassmorphism dashboard
+- Real-time pipeline visualization (SSE card animations)
+- Savings dashboard with metrics
+- Demo-ready polish
 
----
+### Technical:
+- Build `src/ui/static/` (HTML/CSS/JS)
+- Connect to `/events/{run_id}` via EventSource API
+- Animate cards for each pipeline step
+- Show PR links and savings numbers
 
-## 6. What Needs to Be Done Next
-
-### Immediate (Phase 1 completion — Day 2-3)
-1. **Debug MCP SSE** or formally decide to use REST-only (for judging, MCP would be better)
-2. **Build FastAPI server** (`src/server.py`) with `/health` and `/trigger` endpoints
-3. **Create synthetic data loader** script to inject demo data into Splunk `main` index
-4. **Verify LLM integration** — test Gemini via `langchain-google-genai` (DONE: verified with `tests/test_llm_connection.py`).
-
-### Phase 2 (Days 4-7) — The Core Pipeline
-5. Define LangGraph state schema (`SplunkZeroState` in `architecture.md`)
-6. Build agent nodes: ingest analysis, search audit, waste detection, source tracing, code analysis, PR creation, report generation
-7. Wire up SSE event emission from each node
-8. End-to-end test: trigger → PR created
-
-### Phase 3 (Days 8-10) — UI of Thinking
-9. Build the frontend (HTML/CSS/JS) with dark glassmorphism theme
-10. SSE event consumption → animated card display
-11. Polish and demo rehearsal
-
-### Phase 4 (Days 11-13) — Submission
-12. Architecture diagram, README, demo video
-13. Edge case testing, code cleanup
-14. Devpost submission
+### Phase 4 — Submission:
+- Architecture diagram, README, demo video
+- Edge case testing, code cleanup
+- Devpost submission
 
 ---
 
-## 7. Key Files to Read First
-
-When starting a new conversation, read these in order:
-
-1. **This file** (you're reading it)
-2. `memory/progress.md` — Current status and blockers
-3. `planning/architecture.md` — System design and LangGraph schema
-4. `planning/decisions.md` — 8 locked technical decisions
-5. `planning/milestones.md` — Phase-by-phase checklist
-6. `src/config.py` — Configuration system
-7. `src/mcp/splunk_client.py` — The Splunk client (dual MCP+REST)
-
----
-
-## 8. .env Structure (DO NOT commit)
+## 6. .env Structure
 
 ```env
-# Splunk
 SPLUNK_HOST=localhost
 SPLUNK_PORT=8089
-SPLUNK_TOKEN=<MCP Encrypted Token — long base64 string>
+SPLUNK_TOKEN=<MCP Encrypted Token>
 SPLUNK_MCP_URL=https://localhost:8089/services/mcp
-SPLUNK_USERNAME=admin
-SPLUNK_PASSWORD=<Splunk admin password>
+SPLUNK_USERNAME=<admin username>
+SPLUNK_PASSWORD=<admin password>
+SPLUNK_HEC_TOKEN=<HEC token for synthetic data>
+SPLUNK_HEC_PORT=8088
 
-# GitHub
 GITHUB_TOKEN=ghp_<...>
 GITHUB_REPO=yoriichi-07/splunk-zero-demo-app
 GITHUB_BRANCH_PREFIX=splunk-zero
 
-# LLM
 GOOGLE_API_KEY=<Gemini API key>
 LLM_MODEL=gemini-3.1-flash-lite
 
-# App
-APP_PORT=8000
+APP_PORT=8888
 COST_PER_GB_PER_DAY=15
 WASTE_THRESHOLD_PCT=5
 MIN_SEARCH_COUNT=2
@@ -225,15 +181,16 @@ ANALYSIS_PERIOD_DAYS=30
 
 ---
 
-## 9. Conversation History
+## 7. Conversation History
 
-- **Conversation ID:** `da6ef238-694e-4705-8e0c-4bddd688bf6b`
-- **Logs:** `C:\Users\shree\.gemini\antigravity-ide\brain\da6ef238-694e-4705-8e0c-4bddd688bf6b\.system_generated\logs\transcript.jsonl`
-- **Started:** 2026-06-02
-- **Last active:** 2026-06-04
+| Conversation | Dates | Summary |
+|---|---|---|
+| `da6ef238-694e-4705-8e0c-4bddd688bf6b` | June 2-4 | Phase 1: Context engineering, scaffolding, Splunk/GitHub/LLM verification |
+| `49945469-a2be-4235-a4f1-dec5f31478ec` | June 5 | Phase 2: Built entire pipeline, all 7 nodes, FastAPI server, synthetic data, E2E verified with real PRs |
 
-### Timeline of work:
-1. **June 2 (session 1):** Received master prompt from Claude agent. Built context engineering system (planning/ + memory/). Selected FinOps Dietitian idea. Locked 8 technical decisions. Created architecture, milestones, demo script, judging alignment.
-2. **June 2 (session 2):** Renamed to "Splunk Zero". Switched LLM from OpenAI/Anthropic to Gemini Flash. Updated all planning docs. Scaffolded code structure. Created .env, requirements.txt, config.py, splunk_client.py, test scripts.
-3. **June 3:** User installed Splunk MCP Server, created tokens. First test runs. Fixed: ModuleNotFoundError (PyGithub), GITHUB_REPO format, Unicode encoding on Windows. Discovered MCP vs REST auth separation.
-4. **June 4:** Fixed REST API POST vs GET (405 error). Fixed MCP SSE ssl_context issue. REST API now fully working — _internal and _audit queries return real data. GitHub fully working. MCP SSE still has TaskGroup error (non-blocking).
+### Key Files to Read First:
+1. **This file** (you're reading it)
+2. `memory/progress.md` — Current status and blockers
+3. `src/agent/graph.py` — The pipeline architecture
+4. `src/server.py` — The API server
+5. `planning/architecture.md` — System design
