@@ -1,0 +1,70 @@
+<!-- Splunk Zero — UI placeholder. Full UI coming in Phase 3. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splunk Zero</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+        }
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #00ff88, #00aaff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .tagline {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        .api-info {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: inline-block;
+        }
+        code {
+            color: #00ff88;
+            background: rgba(0,255,136,0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .note {
+            color: #555;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Splunk Zero</h1>
+        <p class="tagline">Zero noise. Zero waste. Zero unused data.</p>
+        <div class="api-info">
+            <p>API Ready. Full UI coming in Phase 3.</p>
+            <p style="margin-top: 0.5rem;">
+                <code>POST /trigger</code> &middot;
+                <code>GET /events/{run_id}</code> &middot;
+                <code>GET /health</code>
+            </p>
+        </div>
+        <p class="note">Server is running on port 8000</p>
+    </div>
+</body>
+</html>
