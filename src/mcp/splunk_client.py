@@ -21,8 +21,8 @@ try:
     HAS_MCP_SDK = True
 except ImportError:
     HAS_MCP_SDK = False
-    print("⚠️  MCP SDK not installed. Using Splunk REST API fallback.")
-    print("   Install with: pip install mcp")
+    print("[WARN] MCP SDK not installed. Using Splunk REST API fallback.")
+    print("       Install with: pip install mcp")
 
 
 class SplunkMCPClient:

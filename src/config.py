@@ -34,6 +34,10 @@ class Config:
     GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
     LLM_MODEL: str = os.getenv("LLM_MODEL", "gemini-3.1-flash-lite")
 
+    # HEC (HTTP Event Collector) — for synthetic data loading
+    SPLUNK_HEC_TOKEN: str = os.getenv("SPLUNK_HEC_TOKEN", "")
+    SPLUNK_HEC_PORT: int = int(os.getenv("SPLUNK_HEC_PORT", "8088"))
+
     # App settings
     APP_PORT: int = int(os.getenv("APP_PORT", "8000"))
     COST_PER_GB_PER_DAY: float = float(os.getenv("COST_PER_GB_PER_DAY", "15"))
