@@ -82,9 +82,11 @@ async def waste_detection(state: dict) -> dict:
         daily_gb = source.get("daily_gb", 0.0)
         search_count = searched.get(sourcetype, 0)
 
-        # Only flag sourcetypes that look like application logs (contain "app:" or ":")
-        # Skip Splunk internal sourcetypes (no colon, typically system-managed)
-        is_app_sourcetype = ":" in sourcetype or "app" in sourcetype.lower()
+        # Only flag sourcetypes that look like our application logs
+        # In production this would be a configurable pattern list
+        # For demo: only flag "app:*" sourcetypes to avoid false positives
+        # on Splunk internal sourcetypes (node:sidecar:*, etc.)
+        is_app_sourcetype = sourcetype.startswith("app:")
 
         if search_count == 0 and daily_gb >= 0 and is_app_sourcetype:
             est_monthly_cost = round(daily_gb * 30 * cost_per_gb, 2)
