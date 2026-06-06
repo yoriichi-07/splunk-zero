@@ -1,9 +1,9 @@
 # Project Progress
 
-## Current Status: Phase 2 Complete (Pending E2E Verification)
+## Current Status: Phase 3 Complete ✓
 
 ## Current Priority
-Run full end-to-end test with synthetic data to verify: trigger → waste detected → PR created.
+Polish the demo, prepare for submission.
 
 ---
 
@@ -31,7 +31,7 @@ Run full end-to-end test with synthetic data to verify: trigger → waste detect
 - [x] Python venv created + dependencies installed
 - [x] Gemini API verified (Google AI Studio, gemini-3.1-flash-lite works)
 - [x] **MCP SSE decision: committed to REST-only** (SSE has TaskGroup bug, REST works perfectly)
-- [x] **FastAPI server built** (src/server.py) — /health, /trigger, /events/{run_id}
+- [x] **FastAPI server built** (src/server.py) — /health, /trigger, /events/{run_id}, /reset-demo
 - [x] **Port conflict resolved** — Splunk Web uses 8000, app uses 8888
 - [x] **SSE EventManager built** (src/ui/events.py) — async queue-based event streaming
 - [x] **LangGraph state schema** (src/agent/state.py) — SplunkZeroState TypedDict
@@ -39,22 +39,33 @@ Run full end-to-end test with synthetic data to verify: trigger → waste detect
 - [x] **All 7 agent nodes built:**
   - Node 1: ingest_analysis — queries _internal for volume by sourcetype
   - Node 2: search_audit — queries _audit for search activity
-  - Node 3: waste_detection — cross-references to find waste
+  - Node 3: waste_detection — cross-references to find waste (dual-pass: high-volume + zero-search)
   - Node 4: source_tracing — maps sourcetype to repo (configurable + LLM fallback)
   - Node 5: code_analysis — reads config, LLM proposes log level change
   - Node 6: pr_creation — creates branch, commits, opens PR with cost savings
-  - Node 7: report — compiles final summary
+  - Node 7: report — compiles final summary with structured data
 - [x] **LangGraph workflow** (src/agent/graph.py) — all nodes wired, conditional edge after waste_detection
 - [x] **Synthetic data loaded** — 1,900 events across 3 custom sourcetypes via HEC
-- [x] **Pipeline runs successfully** — 4+ test runs, server stays healthy
+- [x] **Pipeline runs successfully** — 5+ test runs, creates real GitHub PRs
+- [x] **E2E Verified:** trigger → waste detected → 3 PRs created → $11,583/mo savings
+- [x] **Phase 3 — UI of Thinking:**
+  - Dark glassmorphism dashboard (HTML/CSS/JS)
+  - Real-time SSE event streaming via EventSource API
+  - 7-step pipeline progress indicator with animated status dots
+  - 4 stat cards with countup animation (sourcetypes, waste, savings, PRs)
+  - Event cards with status-based styling (running/complete/error/info)
+  - Savings highlight badges and waste tables
+  - Final report card with PR links and summary grid
+  - Reset Demo button for quick repo cleanup between runs
+  - Demo reset script (scripts/reset_demo.py)
 
 ## In Progress
-- [/] Full E2E verification: trigger → waste detected → PR created on GitHub
+- [/] Final polish and demo preparation
 
 ## Next Up (Priority Order)
-1. **AI:** Verify synthetic data appears in _internal metrics and triggers waste detection
-2. **AI:** Test full pipeline produces a real GitHub PR
-3. **AI:** Begin Phase 3 — UI of Thinking (dark glassmorphism, SSE card animations)
+1. **Video demo** — Record the full pipeline demo from trigger to PR creation
+2. **README** — Write the project README for submission
+3. **Submission** — Package and submit
 
 ## Blockers
 - None currently
@@ -68,6 +79,7 @@ Run full end-to-end test with synthetic data to verify: trigger → waste detect
 | Synthetic demo data not convincing | Medium | **RESOLVED** — 1,900 events loaded, 3 sourcetypes |
 | LLM hallucinating repo/file mapping | Low | Mitigated with configurable SOURCE_REPO_MAP |
 | Port conflict with Splunk Web | Low | **RESOLVED** — moved to port 8888 |
+| Waste filter too broad | Medium | **RESOLVED** — tightened to `app:*` prefix only |
 
 ## Key Technical Discoveries
 1. **MCP Encrypted Token =/= REST API auth** — Two completely separate auth systems in Splunk
@@ -78,6 +90,7 @@ Run full end-to-end test with synthetic data to verify: trigger → waste detect
 6. **LLM Connection verified** — Gemini 3.1 Flash Lite works via Google AI Studio API key
 7. **Splunk Web uses port 8000** — Must use different port for our FastAPI app
 8. **LangGraph `Annotated[list, add]`** — enables append-only event accumulation across nodes
+9. **Waste filter must be `app:*` prefix** — `node:sidecar:*` and other Splunk internal sourcetypes have `:` too
 
 ## Environment Details
 - **Splunk:** v10.4.0, Windows, server name "Shree_", localhost:8089, 10GB license
@@ -89,4 +102,4 @@ Run full end-to-end test with synthetic data to verify: trigger → waste detect
 
 ## Last Session
 - **Date:** 2026-06-05
-- **Summary:** Built entire Phase 2 pipeline in a single session. Created state schema, event manager, GitHub client, all 7 agent nodes, LangGraph workflow, and FastAPI server. Loaded 1,900 synthetic events into Splunk via HEC. Multiple successful pipeline runs verified.
+- **Summary:** Built Phase 3 UI — dark glassmorphism dashboard with real-time SSE event streaming, pipeline progress indicators, stat cards with countup animation, event cards with status colors, final report grid with PR links. Added demo reset button and script. Tightened waste detection filter to `app:*` prefix. Verified 3 clean demo runs creating real GitHub PRs. Phase 3 complete.
