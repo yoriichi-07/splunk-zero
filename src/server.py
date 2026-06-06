@@ -148,6 +148,24 @@ async def _run_pipeline(run_id: str):
         await event_manager.error(run_id, f"Pipeline failed: {str(e)}")
 
 
+# ── Demo Reset ───────────────────────────────────────────
+@app.post("/reset-demo")
+async def reset_demo():
+    """Reset the demo repository to a clean state."""
+    try:
+        from scripts.reset_demo import reset_demo as do_reset
+        success = do_reset()
+        return JSONResponse({
+            "status": "success" if success else "failed",
+            "message": "Demo repo reset to clean state" if success else "Reset failed",
+        })
+    except Exception as e:
+        return JSONResponse({
+            "status": "error",
+            "message": str(e),
+        }, status_code=500)
+
+
 # ── SSE Event Stream ─────────────────────────────────────
 @app.get("/events/{run_id}")
 async def event_stream(run_id: str):
