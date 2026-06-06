@@ -74,11 +74,14 @@ async def report(state: dict) -> dict:
             detail=report_data["summary"],
             status="complete",
             data={
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "total_monthly_savings": total_savings,
-                "total_annual_savings": total_savings * 12,
+                "total_annual_savings": round(total_savings * 12, 2),
                 "prs_created": len(prs),
                 "pr_urls": [pr.get("pr_url", "") for pr in prs],
                 "sources_analyzed": len(ingest),
+                "wasteful_sources_count": len(wasteful),
+                "summary": report_data["summary"],
             },
         )
     elif waste_found and not prs:
