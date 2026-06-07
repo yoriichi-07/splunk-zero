@@ -280,7 +280,7 @@ class SplunkMCPClient:
         """Query search audit to find what users actually search for."""
         spl = (
             f'index=_audit action=search info=completed '
-            f'| rex field=search "sourcetype\\s*=\\s*(?<searched_sourcetype>\\w+)" '
+            f'| rex field=search "sourcetype\\s*=\\s*\\"?(?<searched_sourcetype>[^\\s\\"|]+)" '
             f'| stats count as search_count by searched_sourcetype '
             f'| sort - search_count'
         )

@@ -6,10 +6,43 @@ A source is "wasteful" if it consumes a high percentage of ingest volume
 but has zero or very few searches in the analysis period.
 """
 
-import random
-from datetime import datetime, timezone
 from src.config import Config
 from src.ui.events import event_manager
+
+
+DEMO_SCALE_BASELINES = {
+    # The local HEC dataset is intentionally small; these baselines model the
+    # same services at enterprise Splunk scale for a repeatable demo.
+    "app:payment-service:debug": {"daily_gb": 12.40, "pct_of_total": 35.0},
+    "app:user-auth:debug": {"daily_gb": 8.10, "pct_of_total": 22.8},
+    "app:inventory-api:debug": {"daily_gb": 5.24, "pct_of_total": 14.8},
+}
+
+
+def _is_in_scope_sourcetype(sourcetype: str) -> bool:
+    """Keep Phase 3 demo focused on application logs, not Splunk internals."""
+    return sourcetype.startswith("app:")
+
+
+def _scaled_source_values(sourcetype: str, daily_gb: float, pct: float) -> dict:
+    """Return deterministic demo-scale values for known synthetic sourcetypes."""
+    baseline = DEMO_SCALE_BASELINES.get(sourcetype)
+    if not baseline:
+        return {
+            "daily_gb": daily_gb,
+            "pct_of_total": pct,
+            "demo_scaled": False,
+            "observed_daily_gb": daily_gb,
+        }
+
+    scaled_daily_gb = max(daily_gb, baseline["daily_gb"])
+    scaled_pct = max(pct, baseline["pct_of_total"])
+    return {
+        "daily_gb": round(scaled_daily_gb, 2),
+        "pct_of_total": round(scaled_pct, 1),
+        "demo_scaled": daily_gb < baseline["daily_gb"],
+        "observed_daily_gb": daily_gb,
+    }
 
 
 async def waste_detection(state: dict) -> dict:
@@ -60,12 +93,16 @@ async def waste_detection(state: dict) -> dict:
         pct = source.get("pct_of_total", 0.0)
         search_count = searched.get(sourcetype, 0)
 
-        if pct > threshold_pct and search_count < min_searches:
-            est_monthly_cost = round(daily_gb * 30 * cost_per_gb, 2)
+        if (
+            _is_in_scope_sourcetype(sourcetype)
+            and pct > threshold_pct
+            and search_count < min_searches
+        ):
+            values = _scaled_source_values(sourcetype, daily_gb, pct)
+            est_monthly_cost = round(values["daily_gb"] * 30 * cost_per_gb, 2)
             wasteful.append({
                 "sourcetype": sourcetype,
-                "daily_gb": daily_gb,
-                "pct_of_total": pct,
+                **values,
                 "search_count_30d": search_count,
                 "est_monthly_cost": est_monthly_cost,
             })
@@ -80,26 +117,17 @@ async def waste_detection(state: dict) -> dict:
             continue
 
         daily_gb = source.get("daily_gb", 0.0)
+        pct = source.get("pct_of_total", 0.0)
         search_count = searched.get(sourcetype, 0)
 
-        # Only flag sourcetypes that look like our application logs
-        # In production this would be a configurable pattern list
-        # For demo: only flag "app:*" sourcetypes to avoid false positives
-        # on Splunk internal sourcetypes (node:sidecar:*, etc.)
-        is_app_sourcetype = sourcetype.startswith("app:")
-
-        if search_count == 0 and daily_gb >= 0 and is_app_sourcetype:
-            est_monthly_cost = round(daily_gb * 30 * cost_per_gb, 2)
-            # For demo: if daily_gb rounds to 0, estimate from event count
-            # (small volumes still cost money at scale)
-            if est_monthly_cost < 0.01:
-                est_monthly_cost = round(daily_gb * 30 * cost_per_gb * 1000, 2)  # Scale up for demo
-                if est_monthly_cost < 1.0:
-                    est_monthly_cost = round(random.uniform(800, 5000), 2)  # Demo: realistic savings
+        if search_count == 0 and _is_in_scope_sourcetype(sourcetype):
+            values = _scaled_source_values(sourcetype, daily_gb, pct)
+            if values["daily_gb"] <= 0:
+                continue
+            est_monthly_cost = round(values["daily_gb"] * 30 * cost_per_gb, 2)
             wasteful.append({
                 "sourcetype": sourcetype,
-                "daily_gb": daily_gb if daily_gb > 0 else round(random.uniform(0.5, 2.0), 2),
-                "pct_of_total": pct if source.get("pct_of_total", 0) > 0 else round(random.uniform(5, 20), 1),
+                **values,
                 "search_count_30d": search_count,
                 "est_monthly_cost": est_monthly_cost,
             })
