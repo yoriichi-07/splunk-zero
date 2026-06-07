@@ -3,167 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Splunk Zero — Zero noise. Zero waste. Zero unused data.</title>
-    <meta name="description" content="AI-powered Splunk log optimization agent. Detects wasteful logging, traces to source code, and creates PRs to reduce costs.">
+    <title>Splunk Zero - Autonomous Splunk Cost Control</title>
+    <meta name="description" content="Splunk Zero detects unused log ingest, traces it to source code, and creates GitHub pull requests to reduce logging waste.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <!-- Ambient background effects -->
-    <div class="ambient-bg">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-    </div>
+    <div class="surface-grid" aria-hidden="true"></div>
 
-    <!-- Main container -->
-    <div class="app">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-left">
-                <div class="logo">
-                    <div class="logo-icon">
-                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                            <circle cx="16" cy="16" r="14" stroke="url(#grad1)" stroke-width="2"/>
-                            <path d="M10 16 L14 20 L22 12" stroke="url(#grad1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                            <defs>
-                                <linearGradient id="grad1" x1="0" y1="0" x2="32" y2="32">
-                                    <stop offset="0%" stop-color="#00ff88"/>
-                                    <stop offset="100%" stop-color="#00aaff"/>
-                                </linearGradient>
-                            </defs>
-                        </svg>
-                    </div>
-                    <div class="logo-text">
-                        <h1>Splunk Zero</h1>
-                        <span class="tagline">Zero noise. Zero waste. Zero unused data.</span>
-                    </div>
-                </div>
-            </div>
-            <div class="header-right">
-                <button class="reset-btn" id="resetBtn" onclick="resetDemo()" title="Reset demo repo to clean state">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+    <div class="app-shell">
+        <header class="topbar">
+            <a class="brand" href="/" aria-label="Splunk Zero dashboard">
+                <span class="brand-mark">SZ</span>
+                <span class="brand-copy">
+                    <span class="brand-name">Splunk Zero</span>
+                    <span class="brand-line">Zero noise. Zero waste. Zero unused data.</span>
+                </span>
+            </a>
+
+            <div class="topbar-actions">
+                <button class="ghost-button" id="resetBtn" onclick="resetDemo()" title="Reset demo repository">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 12a9 9 0 1 0 3-6.7"/>
+                        <path d="M3 4v6h6"/>
                     </svg>
-                    Reset Demo
+                    <span>Reset Demo</span>
                 </button>
-                <div class="status-indicator" id="serverStatus">
-                    <div class="status-dot"></div>
-                    <span>Checking...</span>
+                <div class="health-pill" id="serverStatus">
+                    <span class="health-dot"></span>
+                    <span>Checking</span>
                 </div>
             </div>
         </header>
 
-        <!-- Dashboard Grid -->
-        <main class="dashboard">
-            <!-- Left: Controls + Stats -->
-            <section class="panel control-panel">
-                <div class="panel-header">
-                    <h2>Agent Control</h2>
+        <main class="workspace">
+            <section class="command-band">
+                <div class="mission-copy">
+                    <span class="eyebrow">Agentic FinOps for Splunk</span>
+                    <h1>Autonomous ingest waste control.</h1>
+                    <p>Splunk Zero compares what you pay to ingest against what teams actually search, then opens reviewable pull requests for noisy app logs.</p>
                 </div>
-                <div class="panel-body">
+
+                <div class="command-card">
+                    <div class="run-meta">
+                        <span class="meta-label">Run</span>
+                        <span class="run-id-badge" id="runIdBadge" style="display:none;">
+                            <span id="runIdText"></span>
+                        </span>
+                        <span class="run-id-placeholder" id="runIdPlaceholder">standby</span>
+                    </div>
                     <button class="trigger-btn" id="triggerBtn" onclick="triggerRun()">
-                        <div class="btn-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polygon points="5 3 19 12 5 21 5 3"/>
+                        <span class="trigger-icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M8 5v14l11-7Z"/>
                             </svg>
-                        </div>
-                        <div class="btn-text">
-                            <span class="btn-label">Start Investigation</span>
-                            <span class="btn-sub">Analyze Splunk ingest &amp; detect waste</span>
-                        </div>
+                        </span>
+                        <span class="trigger-copy">
+                            <span class="trigger-label">Start Investigation</span>
+                            <span class="trigger-sub">Splunk evidence to GitHub PR</span>
+                        </span>
                     </button>
-
-                    <div class="stats-grid" id="statsGrid">
-                        <div class="stat-card" id="statSources">
-                            <div class="stat-value">--</div>
-                            <div class="stat-label">Sourcetypes</div>
-                        </div>
-                        <div class="stat-card" id="statWaste">
-                            <div class="stat-value">--</div>
-                            <div class="stat-label">Waste Found</div>
-                        </div>
-                        <div class="stat-card" id="statSavings">
-                            <div class="stat-value">--</div>
-                            <div class="stat-label">Monthly Savings</div>
-                        </div>
-                        <div class="stat-card" id="statPRs">
-                            <div class="stat-value">--</div>
-                            <div class="stat-label">PRs Created</div>
-                        </div>
-                    </div>
-
-                    <!-- Pipeline Progress -->
-                    <div class="pipeline-progress" id="pipelineProgress" style="display:none;">
-                        <h3>Pipeline Progress</h3>
-                        <div class="pipeline-steps">
-                            <div class="step" data-step="ingest_analysis">
-                                <div class="step-indicator"></div>
-                                <span>Ingest Analysis</span>
-                            </div>
-                            <div class="step" data-step="search_audit">
-                                <div class="step-indicator"></div>
-                                <span>Search Audit</span>
-                            </div>
-                            <div class="step" data-step="waste_detection">
-                                <div class="step-indicator"></div>
-                                <span>Waste Detection</span>
-                            </div>
-                            <div class="step" data-step="source_tracing">
-                                <div class="step-indicator"></div>
-                                <span>Source Tracing</span>
-                            </div>
-                            <div class="step" data-step="code_analysis">
-                                <div class="step-indicator"></div>
-                                <span>Code Analysis</span>
-                            </div>
-                            <div class="step" data-step="pr_creation">
-                                <div class="step-indicator"></div>
-                                <span>PR Creation</span>
-                            </div>
-                            <div class="step" data-step="report">
-                                <div class="step-indicator"></div>
-                                <span>Report</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </section>
 
-            <!-- Right: Event Stream -->
-            <section class="panel event-panel">
-                <div class="panel-header">
-                    <h2>Agent Thinking</h2>
-                    <div class="run-id-badge" id="runIdBadge" style="display:none;">
-                        <span id="runIdText"></span>
+            <section class="metrics-row" id="statsGrid" aria-label="Investigation metrics">
+                <article class="metric-card" id="statSources">
+                    <span class="metric-label">Sourcetypes</span>
+                    <span class="metric-value">--</span>
+                </article>
+                <article class="metric-card" id="statWaste">
+                    <span class="metric-label">Waste Found</span>
+                    <span class="metric-value">--</span>
+                </article>
+                <article class="metric-card metric-wide" id="statSavings">
+                    <span class="metric-label">Monthly Savings</span>
+                    <span class="metric-value">--</span>
+                </article>
+                <article class="metric-card" id="statPRs">
+                    <span class="metric-label">PRs Created</span>
+                    <span class="metric-value">--</span>
+                </article>
+            </section>
+
+            <section class="content-grid">
+                <aside class="panel pipeline-panel" id="pipelineProgress" style="display:none;">
+                    <div class="panel-heading">
+                        <span class="panel-kicker">Pipeline</span>
+                        <h2>Agent execution</h2>
                     </div>
-                </div>
-                <div class="panel-body">
+                    <div class="pipeline-steps">
+                        <div class="step" data-step="ingest_analysis">
+                            <span class="step-indicator"></span>
+                            <span class="step-copy">
+                                <strong>Ingest Analysis</strong>
+                                <small>Internal volume metrics</small>
+                            </span>
+                        </div>
+                        <div class="step" data-step="search_audit">
+                            <span class="step-indicator"></span>
+                            <span class="step-copy">
+                                <strong>Search Audit</strong>
+                                <small>User search history</small>
+                            </span>
+                        </div>
+                        <div class="step" data-step="waste_detection">
+                            <span class="step-indicator"></span>
+                            <span class="step-copy">
+                                <strong>Waste Detection</strong>
+                                <small>Usage versus cost</small>
+                            </span>
+                        </div>
+                        <div class="step" data-step="source_tracing">
+                            <span class="step-indicator"></span>
+                            <span class="step-copy">
+                                <strong>Source Tracing</strong>
+                                <small>Sourcetype to repo</small>
+                            </span>
+                        </div>
+                        <div class="step" data-step="code_analysis">
+                            <span class="step-indicator"></span>
+                            <span class="step-copy">
+                                <strong>Code Analysis</strong>
+                                <small>Logging config review</small>
+                            </span>
+                        </div>
+                        <div class="step" data-step="pr_creation">
+                            <span class="step-indicator"></span>
+                            <span class="step-copy">
+                                <strong>PR Creation</strong>
+                                <small>Branch, commit, pull request</small>
+                            </span>
+                        </div>
+                        <div class="step" data-step="report">
+                            <span class="step-indicator"></span>
+                            <span class="step-copy">
+                                <strong>Report</strong>
+                                <small>Impact summary</small>
+                            </span>
+                        </div>
+                    </div>
+                </aside>
+
+                <section class="panel event-panel">
+                    <div class="panel-heading event-heading">
+                        <div>
+                            <span class="panel-kicker">Live Evidence</span>
+                            <h2>Investigation ledger</h2>
+                        </div>
+                        <span class="stream-state" id="streamState">Idle</span>
+                    </div>
+
                     <div class="event-stream" id="eventStream">
                         <div class="empty-state" id="emptyState">
-                            <div class="empty-icon">
-                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
-                                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                                    <path d="M2 17l10 5 10-5"/>
-                                    <path d="M2 12l10 5 10-5"/>
+                            <span class="empty-mark">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M4 5h16"/>
+                                    <path d="M4 12h16"/>
+                                    <path d="M4 19h10"/>
                                 </svg>
-                            </div>
-                            <p>Click <strong>Start Investigation</strong> to begin.</p>
-                            <p class="empty-sub">The agent will query Splunk, detect waste,<br>trace sources, and create PRs — all autonomously.</p>
+                            </span>
+                            <span class="empty-title">Awaiting run</span>
+                            <span class="empty-copy">Evidence, decisions, remediation, and savings will stream into this ledger.</span>
                         </div>
                     </div>
-                </div>
+                </section>
             </section>
         </main>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <span>Splunk Agentic Ops Hackathon 2026</span>
-            <span class="separator">|</span>
-            <span>Powered by LangGraph + Gemini + Splunk MCP</span>
-        </footer>
     </div>
 
     <script src="/static/app.js"></script>
