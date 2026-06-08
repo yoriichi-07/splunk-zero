@@ -95,7 +95,9 @@ def _generate_event(template: str) -> str:
         "{query_time}": str(random.randint(1, 50)),
         "{conn_count}": str(random.randint(5, 50)),
         "{queue_depth}": str(random.randint(0, 10)),
-        "{username}": random.choice(["alice", "bob", "charlie", "diana", "eve", "frank"]),
+        "{username}": random.choice(
+            ["alice", "bob", "charlie", "diana", "eve", "frank"]
+        ),
         "{ip_addr}": f"10.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(1,254)}",
         "{session_id}": "".join(random.choices(string.hexdigits[:16], k=16)),
         "{exp_time}": str(int(time.time()) + 3600),
@@ -204,7 +206,9 @@ def load_synthetic_data():
                     events=events,
                 )
                 status = result.get("text", "unknown")
-                print(f"       Batch {batch_num}/{batches}: {len(events)} events -> {status}")
+                print(
+                    f"       Batch {batch_num}/{batches}: {len(events)} events -> {status}"
+                )
                 total_events += len(events)
             except Exception as e:
                 print(f"       Batch {batch_num}/{batches}: FAILED - {e}")
@@ -217,7 +221,9 @@ def load_synthetic_data():
     print(f"  {'=' * 50}")
     print(f"\n  These will appear in Splunk's _internal metrics within ~60 seconds.")
     print(f"  Verify in Splunk Web:")
-    print(f"    Search: index=_internal source=*metrics.log group=per_sourcetype_thruput")
+    print(
+        f"    Search: index=_internal source=*metrics.log group=per_sourcetype_thruput"
+    )
     print(f"            | stats sum(kb) as total_kb by series | sort - total_kb")
     print(f"\n  Since nobody will search for these sourcetypes, the agent will")
     print(f"  detect them as wasteful when it runs.\n")
@@ -228,6 +234,7 @@ def load_synthetic_data():
 if __name__ == "__main__":
     # Load .env
     from dotenv import load_dotenv
+
     load_dotenv(Path(__file__).parent.parent / ".env")
 
     load_synthetic_data()
