@@ -7,17 +7,15 @@ We use the official Python MCP SDK to communicate properly.
 Fallback: If MCP fails, we can use the Splunk REST API directly.
 """
 
-import ssl
 import json
 import httpx
-from typing import Optional
 from contextlib import asynccontextmanager
-from functools import partial
 
 # Try MCP SDK first, fallback to REST
 try:
     from mcp.client.sse import sse_client
     from mcp import ClientSession
+
     HAS_MCP_SDK = True
 except ImportError:
     HAS_MCP_SDK = False
@@ -28,10 +26,10 @@ except ImportError:
 class SplunkMCPClient:
     """
     Client for Splunk MCP Server.
-    
+
     Primary: Uses MCP protocol over SSE (the proper way).
     Fallback: Uses Splunk REST API directly if MCP SDK unavailable.
-    
+
     Note: MCP uses its own encrypted token for auth.
           REST API uses basic auth (username/password) - completely separate.
     """
@@ -109,12 +107,15 @@ class SplunkMCPClient:
         max_results: int = 100,
     ) -> dict:
         """Execute an SPL query via MCP Server."""
-        return await self.mcp_call_tool("splunk_run_query", {
-            "search_query": spl_query,
-            "earliest_time": earliest_time,
-            "latest_time": latest_time,
-            "max_results": max_results,
-        })
+        return await self.mcp_call_tool(
+            "splunk_run_query",
+            {
+                "search_query": spl_query,
+                "earliest_time": earliest_time,
+                "latest_time": latest_time,
+                "max_results": max_results,
+            },
+        )
 
     async def mcp_get_indexes(self) -> dict:
         """List all accessible indexes via MCP."""
@@ -134,7 +135,11 @@ class SplunkMCPClient:
         """Execute SPL query via Splunk REST API (fallback)."""
         url = f"{self.base_url}/services/search/jobs/export"
         data = {
-            "search": f"search {spl_query}" if not spl_query.strip().startswith("|") else spl_query,
+            "search": (
+                f"search {spl_query}"
+                if not spl_query.strip().startswith("|")
+                else spl_query
+            ),
             "earliest_time": earliest_time,
             "latest_time": latest_time,
             "output_mode": "json",
@@ -179,8 +184,12 @@ class SplunkMCPClient:
                 "indexes": [
                     {
                         "name": e["name"],
-                        "totalEventCount": e.get("content", {}).get("totalEventCount", "N/A"),
-                        "currentDBSizeMB": e.get("content", {}).get("currentDBSizeMB", "N/A"),
+                        "totalEventCount": e.get("content", {}).get(
+                            "totalEventCount", "N/A"
+                        ),
+                        "currentDBSizeMB": e.get("content", {}).get(
+                            "currentDBSizeMB", "N/A"
+                        ),
                     }
                     for e in entries
                 ]
@@ -219,14 +228,19 @@ class SplunkMCPClient:
                 return await self.mcp_health_check()
             except Exception as mcp_err:
                 print(f"  [WARN] MCP health check failed: {mcp_err}")
-                print(f"  Falling back to REST API...")
+                print("  Falling back to REST API...")
 
         return await self.rest_health_check()
 
     async def list_tools(self) -> list:
         """List available tools — MCP only (no REST equivalent)."""
         if not HAS_MCP_SDK:
-            return [{"name": "REST_API_FALLBACK", "description": "Using Splunk REST API directly"}]
+            return [
+                {
+                    "name": "REST_API_FALLBACK",
+                    "description": "Using Splunk REST API directly",
+                }
+            ]
         return await self.mcp_list_tools()
 
     async def run_query(
@@ -239,12 +253,16 @@ class SplunkMCPClient:
         """Run SPL query — tries MCP first, falls back to REST."""
         if HAS_MCP_SDK:
             try:
-                return await self.mcp_run_query(spl_query, earliest_time, latest_time, max_results)
+                return await self.mcp_run_query(
+                    spl_query, earliest_time, latest_time, max_results
+                )
             except Exception as mcp_err:
                 print(f"  [WARN] MCP query failed: {mcp_err}")
-                print(f"  Falling back to REST API...")
+                print("  Falling back to REST API...")
 
-        return await self.rest_search(spl_query, earliest_time, latest_time, max_results)
+        return await self.rest_search(
+            spl_query, earliest_time, latest_time, max_results
+        )
 
     async def get_indexes(self) -> dict:
         """Get indexes — tries MCP first, falls back to REST."""
@@ -253,7 +271,7 @@ class SplunkMCPClient:
                 return await self.mcp_get_indexes()
             except Exception as mcp_err:
                 print(f"  [WARN] MCP get_indexes failed: {mcp_err}")
-                print(f"  Falling back to REST API...")
+                print("  Falling back to REST API...")
 
         return await self.rest_get_indexes()
 
@@ -264,24 +282,24 @@ class SplunkMCPClient:
     async def query_ingest_volume(self, days: int = 30) -> dict:
         """Query ingest volume by sourcetype from _internal metrics."""
         spl = (
-            f'index=_internal source=*metrics.log group=per_sourcetype_thruput '
-            f'| stats sum(kb) as total_kb by series '
-            f'| eval daily_gb = round(total_kb / 1024 / 1024 / {days}, 2) '
-            f'| sort - daily_gb '
-            f'| head 50 '
-            f'| eventstats sum(daily_gb) as grand_total '
-            f'| eval pct_of_total = round(daily_gb / grand_total * 100, 1) '
-            f'| table series, daily_gb, pct_of_total '
-            f'| rename series as sourcetype'
+            f"index=_internal source=*metrics.log group=per_sourcetype_thruput "
+            f"| stats sum(kb) as total_kb by series "
+            f"| eval daily_gb = round(total_kb / 1024 / 1024 / {days}, 2) "
+            f"| sort - daily_gb "
+            f"| head 50 "
+            f"| eventstats sum(daily_gb) as grand_total "
+            f"| eval pct_of_total = round(daily_gb / grand_total * 100, 1) "
+            f"| table series, daily_gb, pct_of_total "
+            f"| rename series as sourcetype"
         )
         return await self.run_query(spl, earliest_time=f"-{days}d")
 
     async def query_search_audit(self, days: int = 30) -> dict:
         """Query search audit to find what users actually search for."""
         spl = (
-            f'index=_audit action=search info=completed '
-            f'| rex field=search "sourcetype\\s*=\\s*\\"?(?<searched_sourcetype>[^\\s\\"|]+)" '
-            f'| stats count as search_count by searched_sourcetype '
-            f'| sort - search_count'
+            "index=_audit action=search info=completed "
+            '| rex field=search "sourcetype\\s*=\\s*\\"?(?<searched_sourcetype>[^\\s\\"|]+)" '
+            "| stats count as search_count by searched_sourcetype "
+            "| sort - search_count"
         )
         return await self.run_query(spl, earliest_time=f"-{days}d")
