@@ -62,6 +62,7 @@ class Config:
     @classmethod
     def print_status(cls):
         """Print config status for debugging."""
+
         def check(val):
             return "[OK] set" if val else "[!!] missing"
 

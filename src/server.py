@@ -74,20 +74,22 @@ async def health_check():
     except Exception as e:
         splunk_status = f"error: {str(e)}"
 
-    return JSONResponse({
-        "status": "healthy" if not missing else "degraded",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "config": {
-            "missing_keys": missing,
-            "splunk_host": f"{Config.SPLUNK_HOST}:{Config.SPLUNK_PORT}",
-            "github_repo": Config.GITHUB_REPO,
-            "llm_model": Config.LLM_MODEL,
-        },
-        "splunk": {
-            "status": splunk_status,
-            **splunk_info,
-        },
-    })
+    return JSONResponse(
+        {
+            "status": "healthy" if not missing else "degraded",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "config": {
+                "missing_keys": missing,
+                "splunk_host": f"{Config.SPLUNK_HOST}:{Config.SPLUNK_PORT}",
+                "github_repo": Config.GITHUB_REPO,
+                "llm_model": Config.LLM_MODEL,
+            },
+            "splunk": {
+                "status": splunk_status,
+                **splunk_info,
+            },
+        }
+    )
 
 
 # ── Trigger Agent Run ────────────────────────────────────
@@ -108,12 +110,14 @@ async def trigger_run(background_tasks: BackgroundTasks):
     # Start the pipeline in background
     background_tasks.add_task(_run_pipeline, run_id)
 
-    return JSONResponse({
-        "status": "started",
-        "run_id": run_id,
-        "events_url": f"/events/{run_id}",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    })
+    return JSONResponse(
+        {
+            "status": "started",
+            "run_id": run_id,
+            "events_url": f"/events/{run_id}",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    )
 
 
 async def _run_pipeline(run_id: str):
@@ -154,16 +158,24 @@ async def reset_demo():
     """Reset the demo repository to a clean state."""
     try:
         from scripts.reset_demo import reset_demo as do_reset
+
         success = do_reset()
-        return JSONResponse({
-            "status": "success" if success else "failed",
-            "message": "Demo repo reset to clean state" if success else "Reset failed",
-        })
+        return JSONResponse(
+            {
+                "status": "success" if success else "failed",
+                "message": (
+                    "Demo repo reset to clean state" if success else "Reset failed"
+                ),
+            }
+        )
     except Exception as e:
-        return JSONResponse({
-            "status": "error",
-            "message": str(e),
-        }, status_code=500)
+        return JSONResponse(
+            {
+                "status": "error",
+                "message": str(e),
+            },
+            status_code=500,
+        )
 
 
 # ── SSE Event Stream ─────────────────────────────────────
@@ -185,7 +197,8 @@ async def root():
         return HTMLResponse(html_file.read_text(encoding="utf-8"))
 
     # Fallback if UI hasn't been built yet
-    return HTMLResponse("""
+    return HTMLResponse(
+        """
     <!DOCTYPE html>
     <html>
     <head><title>Splunk Zero</title></head>
@@ -202,12 +215,14 @@ async def root():
         </div>
     </body>
     </html>
-    """)
+    """
+    )
 
 
 # ── Run directly ─────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
+
     print("\\n" + "=" * 50)
     print("  Splunk Zero -- Starting Server")
     print("=" * 50)
