@@ -1,83 +1,83 @@
-# Handoff Document — Splunk Zero
+# Handoff - Splunk Zero
 
-## Last Updated: 2026-06-05 (Phase 3 Complete)
+## Read This First
+
+Splunk Zero is an autonomous cost-optimization agent for Splunk. It queries Splunk ingest and search metadata, identifies unused high-noise app logs, maps them to GitHub logging configs, and opens PRs that reduce DEBUG logging.
+
+Current scope is complete through Phase 4. The project is fully built and ready for submission.
 
 ## Quick Start
-```bash
-cd "d:\intel\splunk\splunk hack\splunk-zero"
-python -m scripts.reset_demo    # Reset demo repo before each demo
-python -m src.server             # Start server at http://localhost:8888
+
+```powershell
+cd "D:\intel\splunk\splunk hack\splunk-zero"
+python -m scripts.reset_demo
+python -m src.server
 ```
 
-## What Is This?
-**Splunk Zero** is an AI agent that autonomously detects wasteful logging in Splunk, traces it to source code in GitHub, and creates Pull Requests to fix it — saving organizations real money.
+Then open `http://localhost:8888`.
 
-**Tagline:** "Zero noise. Zero waste. Zero unused data."
+## Architecture In One Pass
 
-## Architecture
-```
-User clicks "Start Investigation" in UI
-    → POST /trigger → run_id returned
-    → Background: LangGraph pipeline runs 7 nodes
-    → Each node emits SSE events via EventManager
-    → Browser receives events via EventSource API
-    → UI renders event cards in real-time
-    → Pipeline creates real PRs on GitHub
-```
-
-## 7-Node LangGraph Pipeline
-1. **ingest_analysis** — Query `_internal` for sourcetype volumes
-2. **search_audit** — Query `_audit` for search activity 
-3. **waste_detection** — Cross-reference: high-volume + zero searches = waste
-4. **source_tracing** — Map sourcetype → GitHub repo (LLM fallback)
-5. **code_analysis** — Read config, LLM proposes log level reduction
-6. **pr_creation** — Create branch, commit change, open PR
-7. **report** — Compile final summary with savings calculation
+1. User starts a run in the UI.
+2. `POST /trigger` creates a run id and event queue.
+3. LangGraph executes seven nodes:
+   - ingest analysis
+   - search audit
+   - waste detection
+   - source tracing
+   - code analysis
+   - PR creation
+   - report
+4. Each node emits SSE events through `src/ui/events.py`.
+5. Browser renders the live "UI of Thinking".
+6. GitHub PR links and savings appear in the final report.
 
 ## Key Files
+
 | File | Purpose |
 |---|---|
-| `src/server.py` | FastAPI server — /health, /trigger, /events, /reset-demo |
-| `src/ui/events.py` | SSE EventManager — async queue per run |
-| `src/ui/static/index.html` | Dashboard UI |
-| `src/ui/static/style.css` | CSS design system (dark glassmorphism) |
-| `src/ui/static/app.js` | JS — SSE streaming, event rendering, animations |
-| `src/agent/graph.py` | LangGraph workflow definition |
-| `src/agent/state.py` | State schema (SplunkZeroState TypedDict) |
-| `src/agent/nodes/*.py` | All 7 pipeline nodes |
-| `src/mcp/splunk_client.py` | Splunk REST API client |
-| `src/github/client.py` | GitHub API client |
-| `src/config.py` | Configuration from .env |
-| `scripts/reset_demo.py` | Reset demo repo before each run |
+| `src/server.py` | FastAPI app, health, trigger, SSE, reset, static UI |
+| `src/ui/events.py` | Per-run SSE queue manager |
+| `src/ui/static/index.html` | Phase 3 dashboard markup |
+| `src/ui/static/style.css` | Phase 3 dashboard design system |
+| `src/ui/static/app.js` | SSE handling, event rendering, stats, reset |
+| `src/agent/graph.py` | LangGraph workflow |
+| `src/agent/state.py` | Agent state schema |
+| `src/agent/nodes/*.py` | Pipeline node implementations |
+| `src/mcp/splunk_client.py` | Splunk MCP/REST client |
+| `src/github/client.py` | GitHub API wrapper |
+| `scripts/synthetic_data.py` | Loads demo sourcetypes into Splunk HEC |
+| `scripts/reset_demo.py` | Resets GitHub repo for another demo run |
 
-## What Phase 3 Built
-- Dark glassmorphism dashboard with ambient orb background animations
-- Real-time SSE event streaming via EventSource API
-- 7-step pipeline progress indicator with animated status dots
-- 4 stat cards (sourcetypes, waste found, monthly savings, PRs created)
-- Countup animation for savings stat ($0 → $11,583 over 1.2s)
-- Event cards with color-coded status borders (blue=running, green=complete, red=error, purple=info)
-- Savings highlight badges ($X,XXX/month with annual projection)
-- Final report card with summary grid and clickable PR buttons
-- Reset Demo button in header for quick repo cleanup
-- Demo reset script (scripts/reset_demo.py)
+## Phase 3 State
 
-## Demo Flow
-1. Open http://localhost:8888
-2. Click "Start Investigation"
-3. Watch events stream in real-time (~60 seconds total)
-4. Stats populate: 32 sourcetypes → 4 waste → $11K savings → 3 PRs
-5. Final report shows clickable links to real GitHub PRs
-6. Click "Reset Demo" to clean up for next run
+The earlier Phase 3 UI was functional but generic. It has now been rebuilt as a premium operational dashboard with:
 
-## Known Issues / Gotchas
-- **MCP SSE doesn't work on Windows** — TaskGroup bug. Uses REST API fallback.
-- **Waste detection only flags `app:*` sourcetypes** — Avoids false positives on Splunk internal `node:sidecar:*` etc.
-- **LLM (Gemini) sometimes returns content as list** — Code handles `.join()` for parts.
-- **Demo repo must be reset between runs** — Use /reset-demo or `python -m scripts.reset_demo`.
-- **Port 8888** — Splunk Web uses 8000, our app uses 8888.
+- restrained dark command-center styling
+- evidence-first metrics
+- clear run controls
+- seven-step pipeline rail
+- live event ledger
+- deterministic savings presentation
+- final report with PR links
+- responsive layout
 
-## What's Next (Phase 4 — Polish)
-1. Record demo video
-2. Write project README
-3. Final submission packaging
+## Important Gotchas
+
+- Splunk Web may use port `8000`; this app uses `8888`.
+- MCP SSE exists in code but REST fallback is the reliable path on this machine.
+- `.env` contains real secrets and must stay ignored.
+- `.env.example`, `planning/`, `memory/`, `resources/`, and `hackathon-context/` should remain trackable.
+- The demo repo should be reset before every run.
+- Known synthetic sourcetypes:
+  - `app:payment-service:debug`
+  - `app:user-auth:debug`
+  - `app:inventory-api:debug`
+
+## Next Work If User Continues
+
+The development phases are complete. The remaining work is user-led:
+
+- Record the demo video using `planning/demo-script.md`
+- Fill out the hackathon submission form
+- Celebrate!

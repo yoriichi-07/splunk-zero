@@ -1,72 +1,50 @@
-# Tech Stack — Locked
+# Locked Stack
 
 ## Backend
 
-| Component | Choice | Version |
-|---|---|---|
-| Language | Python | 3.11+ |
-| Orchestration | LangGraph | latest |
-| Web Framework | FastAPI | latest |
-| ASGI Server | Uvicorn | latest |
-| Splunk Integration | Splunk MCP Server (official) | 1.1 |
-| MCP Client | `langchain-mcp-adapters` | latest |
-| GitHub Integration | PyGithub | latest |
-| LLM Client | LangChain Google GenAI (Gemini 3.1 Flash Lite) | latest |
+| Component | Choice |
+|---|---|
+| Language | Python 3.13 local, code targets Python 3.11+ |
+| Web framework | FastAPI |
+| Server | Uvicorn |
+| Agent orchestration | LangGraph |
+| Splunk access | Splunk MCP client code with REST fallback |
+| GitHub access | PyGithub |
+| LLM | Google AI Studio Gemini |
+| Streaming | Server-Sent Events |
 
-## Frontend (UI of Thinking)
+## Frontend
 
 | Component | Choice |
 |---|---|
 | Markup | Vanilla HTML |
-| Styling | Vanilla CSS (dark theme, glassmorphism) |
+| Styling | Vanilla CSS |
 | Logic | Vanilla JavaScript |
-| Data Transport | Server-Sent Events (SSE) |
+| Transport | EventSource over SSE |
 
-## Infrastructure
+No React or build step is used for Phase 3.
 
-| Component | Choice |
-|---|---|
-| Splunk Instance | Local Splunk Enterprise (500MB trial → 10GB pending) |
-| Dev Environment | Python venv |
-| Demo Hosting | Local + ngrok (for webhook demo if needed) |
+## Environment Variables
 
-## Environment Variables (.env)
+Use `.env.example` as the template. Real values live in `.env`.
 
-```env
-# Splunk MCP
-SPLUNK_HOST=localhost
-SPLUNK_PORT=8089
-SPLUNK_TOKEN=your_admin_token_here
-SPLUNK_MCP_URL=https://localhost:8089/services/mcp
+Required:
 
-# GitHub
-GITHUB_TOKEN=ghp_your_personal_access_token
-GITHUB_REPO=your-org/your-repo
-GITHUB_BRANCH_PREFIX=splunk-zero
+- `SPLUNK_HOST`
+- `SPLUNK_PORT`
+- `SPLUNK_TOKEN`
+- `SPLUNK_USERNAME`
+- `SPLUNK_PASSWORD`
+- `GITHUB_TOKEN`
+- `GITHUB_REPO`
+- `GOOGLE_API_KEY`
 
-# LLM
-GOOGLE_API_KEY=your_gemini_api_key
-LLM_MODEL=gemini-3.1-flash-lite
+Useful demo settings:
 
-# App
-APP_PORT=8000
-COST_PER_GB_PER_DAY=15
-WASTE_THRESHOLD_PCT=5
-MIN_SEARCH_COUNT=2
-ANALYSIS_PERIOD_DAYS=30
-```
-
-## Python Dependencies (requirements.txt)
-
-```
-langgraph
-langchain
-langchain-google-genai
-fastapi
-uvicorn[standard]
-sse-starlette
-PyGithub
-python-dotenv
-httpx
-pydantic
-```
+- `APP_PORT=8888`
+- `COST_PER_GB_PER_DAY=15`
+- `WASTE_THRESHOLD_PCT=5`
+- `MIN_SEARCH_COUNT=2`
+- `ANALYSIS_PERIOD_DAYS=30`
+- `SPLUNK_HEC_TOKEN`
+- `SPLUNK_HEC_PORT=8088`
