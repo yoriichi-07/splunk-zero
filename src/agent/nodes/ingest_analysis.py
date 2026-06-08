@@ -53,11 +53,13 @@ async def ingest_analysis(state: dict) -> dict:
             pct = float(row.get("pct_of_total", 0))
             sourcetype = row.get("sourcetype", row.get("series", "unknown"))
 
-            ingest_data.append({
-                "sourcetype": sourcetype,
-                "daily_gb": daily_gb,
-                "pct_of_total": pct,
-            })
+            ingest_data.append(
+                {
+                    "sourcetype": sourcetype,
+                    "daily_gb": daily_gb,
+                    "pct_of_total": pct,
+                }
+            )
             total_gb += daily_gb
 
         # Emit completion event
@@ -93,6 +95,11 @@ async def ingest_analysis(state: dict) -> dict:
             "ingest_by_source": [],
             "total_daily_gb": 0.0,
             "current_step": "ingest_analysis_error",
-            "errors": [{"step": "ingest_analysis", "error": error_msg,
-                        "timestamp": datetime.now(timezone.utc).isoformat()}],
+            "errors": [
+                {
+                    "step": "ingest_analysis",
+                    "error": error_msg,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+            ],
         }

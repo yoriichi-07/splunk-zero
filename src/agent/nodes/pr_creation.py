@@ -90,7 +90,9 @@ async def pr_creation(state: dict) -> dict:
             )
 
             # Step 3: Create PR
-            pr_title = f"[Splunk Zero] Reduce {sourcetype} logging: {old_level} -> {new_level}"
+            pr_title = (
+                f"[Splunk Zero] Reduce {sourcetype} logging: {old_level} -> {new_level}"
+            )
             pr_body = _generate_pr_body(
                 sourcetype=sourcetype,
                 file_path=file_path,
@@ -108,15 +110,17 @@ async def pr_creation(state: dict) -> dict:
                 body=pr_body,
             )
 
-            pull_requests.append({
-                "sourcetype": sourcetype,
-                "repo": repo,
-                "pr_url": pr_result["pr_url"],
-                "pr_number": pr_result["pr_number"],
-                "title": pr_result["title"],
-                "branch": branch_name,
-                "commit_sha": commit_result["commit_sha"],
-            })
+            pull_requests.append(
+                {
+                    "sourcetype": sourcetype,
+                    "repo": repo,
+                    "pr_url": pr_result["pr_url"],
+                    "pr_number": pr_result["pr_number"],
+                    "title": pr_result["title"],
+                    "branch": branch_name,
+                    "commit_sha": commit_result["commit_sha"],
+                }
+            )
 
             # Emit PR created event
             await event_manager.emit(

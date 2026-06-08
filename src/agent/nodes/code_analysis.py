@@ -59,7 +59,11 @@ async def code_analysis(state: dict) -> dict:
                 title=f"Reading: {config_path}",
                 detail=f"Found {len(old_content.splitlines())} lines in {repo}/{config_path}",
                 status="info",
-                data={"repo": repo, "file": config_path, "lines": len(old_content.splitlines())},
+                data={
+                    "repo": repo,
+                    "file": config_path,
+                    "lines": len(old_content.splitlines()),
+                },
             )
 
             # Use LLM to analyze and propose changes
@@ -71,17 +75,19 @@ async def code_analysis(state: dict) -> dict:
             )
 
             if change:
-                proposed_changes.append({
-                    "sourcetype": sourcetype,
-                    "repo": repo,
-                    "file": config_path,
-                    "file_sha": file_sha,
-                    "old_content": old_content,
-                    "new_content": change["new_content"],
-                    "old_level": change["old_level"],
-                    "new_level": change["new_level"],
-                    "diff_summary": change["diff_summary"],
-                })
+                proposed_changes.append(
+                    {
+                        "sourcetype": sourcetype,
+                        "repo": repo,
+                        "file": config_path,
+                        "file_sha": file_sha,
+                        "old_content": old_content,
+                        "new_content": change["new_content"],
+                        "old_level": change["old_level"],
+                        "new_level": change["new_level"],
+                        "diff_summary": change["diff_summary"],
+                    }
+                )
 
                 await event_manager.emit(
                     run_id,

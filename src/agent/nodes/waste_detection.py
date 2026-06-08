@@ -100,12 +100,14 @@ async def waste_detection(state: dict) -> dict:
         ):
             values = _scaled_source_values(sourcetype, daily_gb, pct)
             est_monthly_cost = round(values["daily_gb"] * 30 * cost_per_gb, 2)
-            wasteful.append({
-                "sourcetype": sourcetype,
-                **values,
-                "search_count_30d": search_count,
-                "est_monthly_cost": est_monthly_cost,
-            })
+            wasteful.append(
+                {
+                    "sourcetype": sourcetype,
+                    **values,
+                    "search_count_30d": search_count,
+                    "est_monthly_cost": est_monthly_cost,
+                }
+            )
             seen_sourcetypes.add(sourcetype)
 
     # Pass 2: Zero-search waste (any ingest, literally zero searches)
@@ -125,12 +127,14 @@ async def waste_detection(state: dict) -> dict:
             if values["daily_gb"] <= 0:
                 continue
             est_monthly_cost = round(values["daily_gb"] * 30 * cost_per_gb, 2)
-            wasteful.append({
-                "sourcetype": sourcetype,
-                **values,
-                "search_count_30d": search_count,
-                "est_monthly_cost": est_monthly_cost,
-            })
+            wasteful.append(
+                {
+                    "sourcetype": sourcetype,
+                    **values,
+                    "search_count_30d": search_count,
+                    "est_monthly_cost": est_monthly_cost,
+                }
+            )
             seen_sourcetypes.add(sourcetype)
 
     # Sort by cost (most expensive waste first)

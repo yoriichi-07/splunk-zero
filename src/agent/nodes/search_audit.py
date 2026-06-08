@@ -53,10 +53,12 @@ async def search_audit(state: dict) -> dict:
             count = int(row.get("search_count", 0))
 
             if sourcetype:  # Skip empty sourcetype entries
-                search_data.append({
-                    "searched_sourcetype": sourcetype,
-                    "search_count": count,
-                })
+                search_data.append(
+                    {
+                        "searched_sourcetype": sourcetype,
+                        "search_count": count,
+                    }
+                )
                 total_searches += count
 
         # Emit completion event
@@ -90,6 +92,11 @@ async def search_audit(state: dict) -> dict:
         return {
             "search_activity": [],
             "current_step": "search_audit_error",
-            "errors": [{"step": "search_audit", "error": error_msg,
-                        "timestamp": datetime.now(timezone.utc).isoformat()}],
+            "errors": [
+                {
+                    "step": "search_audit",
+                    "error": error_msg,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+            ],
         }

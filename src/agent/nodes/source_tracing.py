@@ -85,13 +85,15 @@ async def source_tracing(state: dict) -> dict:
             except Exception:
                 pass
 
-            source_repos.append({
-                "sourcetype": sourcetype,
-                "repo": repo,
-                "config_file_path": config_file,
-                "confidence": confidence,
-                "method": "configured_mapping",
-            })
+            source_repos.append(
+                {
+                    "sourcetype": sourcetype,
+                    "repo": repo,
+                    "config_file_path": config_file,
+                    "confidence": confidence,
+                    "method": "configured_mapping",
+                }
+            )
 
             await event_manager.emit(
                 run_id,
