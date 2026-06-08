@@ -18,6 +18,9 @@ from src.config import Config
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 
+import pytest
+
+@pytest.mark.asyncio
 async def test_llm():
     print("\n" + "=" * 60)
     print("  Splunk Zero -- LLM (Google AI Studio) Test")
@@ -26,13 +29,19 @@ async def test_llm():
     # Validate config
     Config.print_status()
     missing = Config.validate()
+    
+    if __name__ != "__main__":
+        if "GOOGLE_API_KEY" in missing or Config.GOOGLE_API_KEY == "your_gemini_api_key_here":
+            pytest.skip("GOOGLE_API_KEY is not configured")
+
     if "GOOGLE_API_KEY" in missing:
         print("[FAIL] GOOGLE_API_KEY is not set. Cannot proceed.")
-        return False
+        assert False, "GOOGLE_API_KEY is not set"
 
     print(f"LLM Model to test: {Config.LLM_MODEL}")
     print("Initializing ChatGoogleGenerativeAI client...")
 
+    success = False
     try:
         # Initialize the Chat model
         llm = ChatGoogleGenerativeAI(
@@ -51,12 +60,15 @@ async def test_llm():
         print("-" * 50)
         print(response.content)
         print("-" * 50)
-        return True
+        success = True
     except Exception as e:
         print(f"\n[FAIL] LLM Test failed: {e}")
         import traceback
+
         traceback.print_exc()
-        return False
+        success = False
+
+    assert success is True
 
 
 if __name__ == "__main__":

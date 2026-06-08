@@ -16,8 +16,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.config import Config
 from src.mcp.splunk_client import SplunkMCPClient
+import pytest
 
-
+@pytest.mark.asyncio
 async def test_connection():
     """Test Splunk connectivity via MCP and REST API."""
     print("\n" + "=" * 60)
@@ -28,9 +29,13 @@ async def test_connection():
     print("\n[1/6] Checking configuration...")
     Config.print_status()
 
+    if __name__ != "__main__":
+        if not Config.SPLUNK_TOKEN or not Config.SPLUNK_USERNAME or Config.SPLUNK_USERNAME == "your_username_here":
+            pytest.skip("Splunk credentials are not configured")
+
     if not Config.SPLUNK_TOKEN:
         print("[FAIL] SPLUNK_TOKEN not set. Cannot proceed.")
-        return False
+        assert False, "SPLUNK_TOKEN not set"
 
     client = SplunkMCPClient(
         host=Config.SPLUNK_HOST,
@@ -42,16 +47,25 @@ async def test_connection():
 
     # 2. REST API health check (most reliable -- test this first)
     print("[2/6] Testing Splunk REST API connectivity...")
+    success = False
     try:
         result = await client.rest_health_check()
-        print(f"  [OK] Splunk REST API is reachable")
+        print("  [OK] Splunk REST API is reachable")
         print(f"       Server: {result.get('server_name', 'unknown')}")
         print(f"       Version: {result.get('version', 'unknown')}")
         print(f"       OS: {result.get('os', 'unknown')}")
+        success = True
     except Exception as e:
         print(f"  [FAIL] REST API failed: {e}")
-        print(f"         Is Splunk running on https://{Config.SPLUNK_HOST}:{Config.SPLUNK_PORT}?")
-        return False
+        print(
+            f"         Is Splunk running on https://{Config.SPLUNK_HOST}:{Config.SPLUNK_PORT}?"
+        )
+        if __name__ != "__main__":
+            pytest.skip("Splunk REST API is not reachable")
+        success = False
+
+    if not success:
+        assert False, "REST API connection failed"
 
     # 3. MCP protocol connection
     print("\n[3/6] Testing MCP Server (SSE protocol)...")
@@ -61,19 +75,19 @@ async def test_connection():
         mcp_works = True
         print(f"  [OK] MCP Server connected! Found {len(tools)} tools:")
         for tool in tools[:10]:
-            name = tool.name if hasattr(tool, 'name') else str(tool)
+            name = tool.name if hasattr(tool, "name") else str(tool)
             desc = ""
-            if hasattr(tool, 'description') and tool.description:
+            if hasattr(tool, "description") and tool.description:
                 desc = tool.description[:60]
             print(f"       - {name}: {desc}")
         if len(tools) > 10:
             print(f"       ... and {len(tools) - 10} more")
     except Exception as e:
         print(f"  [WARN] MCP protocol failed: {e}")
-        print(f"         Will use REST API fallback (still fully functional)")
+        print("         Will use REST API fallback (still fully functional)")
 
     # 4. List indexes
-    print(f"\n[4/6] Listing available indexes...")
+    print("\n[4/6] Listing available indexes...")
     try:
         result = await client.rest_get_indexes()
         indexes = result.get("indexes", [])
@@ -94,7 +108,7 @@ async def test_connection():
         print(f"  [FAIL] Failed to list indexes: {e}")
 
     # 5. Test _internal query
-    print(f"\n[5/6] Querying _internal index (ingest metrics)...")
+    print("\n[5/6] Querying _internal index (ingest metrics)...")
     try:
         spl = (
             "index=_internal source=*metrics.log group=per_sourcetype_thruput "
@@ -116,12 +130,14 @@ async def test_connection():
                 else:
                     print(f"       - {_truncate(_to_str(row))}")
         else:
-            print(f"  [WARN] Query returned empty results (might be normal for fresh install)")
+            print(
+                "  [WARN] Query returned empty results (might be normal for fresh install)"
+            )
     except Exception as e:
         print(f"  [FAIL] _internal query failed: {e}")
 
     # 6. Test _audit query
-    print(f"\n[6/6] Querying _audit index (search activity)...")
+    print("\n[6/6] Querying _audit index (search activity)...")
     try:
         spl = (
             "index=_audit action=search info=completed "
@@ -141,7 +157,7 @@ async def test_connection():
                 else:
                     print(f"       - {_truncate(_to_str(row))}")
         else:
-            print(f"  [WARN] No search activity recorded yet (normal for fresh install)")
+            print("  [WARN] No search activity recorded yet (normal for fresh install)")
     except Exception as e:
         print(f"  [FAIL] _audit query failed: {e}")
 
@@ -149,24 +165,28 @@ async def test_connection():
     print("\n" + "=" * 60)
     print("  SUMMARY")
     print("=" * 60)
-    print(f"  Splunk REST API:  [OK] Working")
-    print(f"  MCP Protocol:     {'[OK] Working' if mcp_works else '[WARN] Failed (using REST fallback)'}")
-    print(f"  _internal access: See test 5 above")
-    print(f"  _audit access:    See test 6 above")
+    print("  Splunk REST API:  [OK] Working")
+    print(
+        f"  MCP Protocol:     {'[OK] Working' if mcp_works else '[WARN] Failed (using REST fallback)'}"
+    )
+    print("  _internal access: See test 5 above")
+    print("  _audit access:    See test 6 above")
 
     if not mcp_works:
-        print(f"\n  NOTE: MCP failed but REST API works -- we can still build everything.")
-        print(f"        REST API gives us full Splunk access for all queries.")
+        print(
+            "\n  NOTE: MCP failed but REST API works -- we can still build everything."
+        )
+        print("        REST API gives us full Splunk access for all queries.")
 
     print("=" * 60 + "\n")
-    return True
+    assert success is True
 
 
 def _extract_rows(result):
     """Extract row data from various response formats."""
     if isinstance(result, dict) and "results" in result:
         return result["results"]
-    if hasattr(result, 'content'):
+    if hasattr(result, "content"):
         content = result.content
         if isinstance(content, list):
             return content
@@ -179,7 +199,7 @@ def _extract_rows(result):
 
 def _to_str(obj) -> str:
     """Safely convert any object to string."""
-    if hasattr(obj, 'text'):
+    if hasattr(obj, "text"):
         return obj.text
     return str(obj)
 

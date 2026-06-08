@@ -15,6 +15,8 @@ from src.config import Config
 from github import Github, GithubException
 
 
+import pytest
+
 def test_github_connection():
     """Test GitHub API connectivity and permissions."""
     print("\n" + "=" * 60)
@@ -23,24 +25,33 @@ def test_github_connection():
 
     # 1. Check config
     print("\n[1/4] Checking configuration...")
+    if __name__ != "__main__":
+        if not Config.GITHUB_TOKEN or Config.GITHUB_TOKEN == "your_github_pat_here":
+            pytest.skip("GITHUB_TOKEN is not configured")
+
     if not Config.GITHUB_TOKEN:
         print("  [FAIL] GITHUB_TOKEN not set in .env")
-        return False
+        assert False, "GITHUB_TOKEN not set"
     if not Config.GITHUB_REPO:
         print("  [FAIL] GITHUB_REPO not set in .env")
-        return False
-    print(f"  [OK] Token: set")
+        assert False, "GITHUB_REPO not set"
+    print("  [OK] Token: set")
     print(f"  [OK] Repo:  {Config.GITHUB_REPO}")
 
     # 2. Authenticate
     print("\n[2/4] Authenticating with GitHub...")
+    success = False
     try:
         g = Github(Config.GITHUB_TOKEN)
         user = g.get_user()
         print(f"  [OK] Authenticated as: {user.login}")
+        success = True
     except GithubException as e:
         print(f"  [FAIL] Authentication failed: {e}")
-        return False
+        success = False
+
+    if not success:
+        assert False, "Authentication failed"
 
     # 3. Access repo
     repo_name = Config.GITHUB_REPO
@@ -63,8 +74,13 @@ def test_github_connection():
 
         # Look for logging config files
         logging_patterns = [
-            "logging.conf", "logging.ini", "log4j.xml", "log4j2.xml",
-            "logback.xml", "logging.yaml", "logging.json",
+            "logging.conf",
+            "logging.ini",
+            "log4j.xml",
+            "log4j2.xml",
+            "logback.xml",
+            "logging.yaml",
+            "logging.json",
             "appsettings.json",
         ]
         found_configs = [f for f in file_names if f.lower() in logging_patterns]
@@ -82,16 +98,18 @@ def test_github_connection():
                 if len(lines) > 10:
                     print(f"       ... ({len(lines) - 10} more lines)")
         else:
-            print(f"  [WARN] No logging configs in repo root.")
+            print("  [WARN] No logging configs in repo root.")
 
     except GithubException as e:
         print(f"  [FAIL] Cannot access repo: {e}")
-        print(f"         GITHUB_REPO should be: owner/repo (e.g. yoriichi-07/splunk-zero-demo-app)")
-        print(f"         NOT the full URL.")
-        return False
+        print(
+            "         GITHUB_REPO should be: owner/repo (e.g. yoriichi-07/splunk-zero-demo-app)"
+        )
+        print("         NOT the full URL.")
+        assert False, f"Cannot access repo: {e}"
 
     # 4. Test write access
-    print(f"\n[4/4] Testing write access (create test branch)...")
+    print("\n[4/4] Testing write access (create test branch)...")
     test_branch_name = "splunk-zero/connection-test"
     try:
         default_branch = repo.get_branch(repo.default_branch)
@@ -103,25 +121,24 @@ def test_github_connection():
         )
         print(f"  [OK] Branch created: {test_branch_name}")
         ref.delete()
-        print(f"  [OK] Branch deleted (cleanup)")
+        print("  [OK] Branch deleted (cleanup)")
 
     except GithubException as e:
         if e.status == 422:
             try:
                 ref = repo.get_git_ref(f"heads/{test_branch_name}")
                 ref.delete()
-                print(f"  [OK] Write access confirmed (cleaned up old test branch)")
+                print("  [OK] Write access confirmed (cleaned up old test branch)")
             except Exception:
                 print(f"  [WARN] Branch already exists: {e}")
         else:
             print(f"  [FAIL] Write access failed: {e}")
-            print(f"         Make sure your PAT has 'repo' scope")
-            return False
+            print("         Make sure your PAT has 'repo' scope")
+            assert False, f"Write access failed: {e}"
 
     print("\n" + "=" * 60)
     print("  [OK] GitHub connection test complete! All checks passed.")
     print("=" * 60 + "\n")
-    return True
 
 
 if __name__ == "__main__":
