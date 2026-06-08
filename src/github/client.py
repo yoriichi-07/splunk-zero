@@ -73,12 +73,14 @@ class GitHubClient:
                 root_contents = repo.get_contents("")
                 for item in root_contents:
                     if item.name.lower() in [f.lower() for f in LOGGING_CONFIG_FILES]:
-                        found.append({
-                            "name": item.name,
-                            "path": item.path,
-                            "size": item.size,
-                            "sha": item.sha,
-                        })
+                        found.append(
+                            {
+                                "name": item.name,
+                                "path": item.path,
+                                "size": item.size,
+                                "sha": item.sha,
+                            }
+                        )
             except GithubException:
                 pass
 
@@ -90,13 +92,17 @@ class GitHubClient:
                     if not isinstance(dir_contents, list):
                         dir_contents = [dir_contents]
                     for item in dir_contents:
-                        if item.name.lower() in [f.lower() for f in LOGGING_CONFIG_FILES]:
-                            found.append({
-                                "name": item.name,
-                                "path": item.path,
-                                "size": item.size,
-                                "sha": item.sha,
-                            })
+                        if item.name.lower() in [
+                            f.lower() for f in LOGGING_CONFIG_FILES
+                        ]:
+                            found.append(
+                                {
+                                    "name": item.name,
+                                    "path": item.path,
+                                    "size": item.size,
+                                    "sha": item.sha,
+                                }
+                            )
                 except GithubException:
                     # Directory doesn't exist — skip
                     continue
