@@ -1,47 +1,55 @@
-# Splunk Zero — Zero Noise. Zero Waste. Zero Unused Data.
+# Splunk Zero Context Guide
 
-## What This Project Is
+Splunk Zero is an autonomous agent for the Splunk Agentic Ops Hackathon. It analyzes Splunk ingest, finds costly log sources that nobody searches, traces those sources to GitHub, and opens pull requests that reduce noisy logging.
 
-**Splunk Zero** is an **autonomous AI agent** that analyzes a company's Splunk data ingestion, identifies expensive log sources that nobody actually searches, traces them to their source code on GitHub, and **creates a Pull Request to reduce the logging level** — calculating the exact dollar savings. Built for the **Splunk Agentic Ops Hackathon** (deadline: June 15, 2026).
+## Current Boundary
 
-## The Winning Strategy
+Work is complete through Phase 3 only:
 
-| Dimension | Our Approach |
+- Phase 1: connectivity and environment verified.
+- Phase 2: backend agent pipeline working end to end.
+- Phase 3: UI of Thinking built and repaired in this session.
+- Phase 4: submission package is intentionally not started here.
+
+## Session Workflow
+
+At the start of a new session, read these files in order:
+
+1. `memory/handoff.md` - fastest operational summary.
+2. `memory/progress.md` - current status, known risks, next work.
+3. `memory/stack.md` - locked technology and environment.
+4. `planning/milestones.md` - phase boundaries.
+5. `planning/architecture.md` - system design and data flow.
+6. `planning/decisions.md` - locked technical decisions.
+7. `planning/judging-alignment.md` - why this should score well.
+8. `planning/demo-script.md` - demo narrative and judge Q&A.
+
+At the end of a session, update `memory/progress.md` and `memory/handoff.md`.
+
+## Project Promise
+
+The demo must communicate one idea instantly:
+
+> Splunk Zero is not a chatbot. It is a worker that turns Splunk evidence into a real GitHub PR with a clear dollar impact.
+
+## Key Files
+
+| Area | Files |
 |---|---|
-| **Primary Track** | Platform & Developer Experience |
-| **Bonus Prize** | Best Use of Splunk MCP Server |
-| **Differentiator** | Worker, not a chatbot — zero human input from trigger to PR |
-| **Demo Centerpiece** | "UI of Thinking" — live step-by-step agent visualization |
-| **The Double-Dip** | Uses MCP for deep multi-index analysis (`_internal` + `_audit`) to win both track AND bonus prize |
+| Server | `src/server.py` |
+| Event streaming | `src/ui/events.py` |
+| Frontend | `src/ui/static/index.html`, `src/ui/static/style.css`, `src/ui/static/app.js` |
+| Agent graph | `src/agent/graph.py`, `src/agent/state.py`, `src/agent/nodes/*.py` |
+| Splunk access | `src/mcp/splunk_client.py` |
+| GitHub access | `src/github/client.py` |
+| Demo data/reset | `scripts/synthetic_data.py`, `scripts/reset_demo.py` |
+| Manual verification | `tests/test_pipeline.py`, `tests/test_mcp_connection.py`, `tests/test_github_connection.py`, `tests/test_llm_connection.py` |
 
-## Why This Wins
+## Run Commands
 
-1. **Unique idea** — Nobody else will build a cost optimizer. Every other team will build chatbots or alert summarizers.
-2. **Clear ROI** — The output is a dollar amount. Judges can immediately grasp the impact.
-3. **Closes the action loop** — Agent doesn't just analyze, it writes actual code changes via GitHub PR.
-4. **Deep MCP usage** — Queries internal Splunk indexes that most developers don't even know exist.
-5. **Zero human input** — Webhook fires → agent investigates → PR created → human notified. That's it.
+```powershell
+python -m scripts.reset_demo
+python -m src.server
+```
 
-## How It Works (The Demo in 3 Sentences)
-
-A webhook triggers the Splunk Zero agent. It uses the Splunk MCP Server to query `_internal` (what's being ingested) and `_audit` (what users actually search for), finds log sources consuming massive volume that nobody ever queries, then traces those sources to a GitHub repo and creates a PR changing the log level from DEBUG to ERROR — complete with a cost savings calculation showing "$4,200/month saved."
-
-## Project Navigation
-
-| File | Purpose |
-|---|---|
-| [architecture.md](file:///d:/intel/splunk/splunk%20hack/planning/architecture.md) | System design, LangGraph states, data flow |
-| [milestones.md](file:///d:/intel/splunk/splunk%20hack/planning/milestones.md) | 4 phases with clear deliverables |
-| [decisions.md](file:///d:/intel/splunk/splunk%20hack/planning/decisions.md) | Locked technical decisions |
-| [demo-script.md](file:///d:/intel/splunk/splunk%20hack/planning/demo-script.md) | 90-second demo flow |
-| [judging-alignment.md](file:///d:/intel/splunk/splunk%20hack/planning/judging-alignment.md) | Every judging criterion mapped to our features |
-| [progress.md](file:///d:/intel/splunk/splunk%20hack/memory/progress.md) | Current state, blockers, next steps |
-| [stack.md](file:///d:/intel/splunk/splunk%20hack/memory/stack.md) | Locked tech stack and environment |
-
-## Session Protocol (Keep It Simple)
-
-**Starting a session:** Read this file → check [progress.md](file:///d:/intel/splunk/splunk%20hack/memory/progress.md) → pick up where we left off.
-
-**Ending a session:** Update [progress.md](file:///d:/intel/splunk/splunk%20hack/memory/progress.md) with what was done.
-
-That's it. No ceremony.
+Open `http://localhost:8888`.

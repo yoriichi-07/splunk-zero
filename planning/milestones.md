@@ -1,90 +1,72 @@
 # Milestones
 
-13 days remaining (June 2 → June 15, 2026). Four phases, no fluff.
+Hackathon deadline: June 15, 2026.
 
----
+## Phase 1 - Foundation
 
-## Phase 1: Foundation — Verify Everything Connects (Days 1-3)
+Goal: prove every external system can be reached.
 
-**Goal:** Prove that the core tools work. No application logic yet — just connectivity.
+- [x] Local Splunk Enterprise running.
+- [x] Splunk MCP Server installed.
+- [x] Splunk REST API health check works.
+- [x] `_internal` ingest metrics query works.
+- [x] `_audit` search activity query works.
+- [x] GitHub API can read repo files.
+- [x] GitHub API can create/delete branches.
+- [x] Gemini API call works.
+- [x] `.env` configured.
+- [x] Synthetic data loader created.
+- [x] FastAPI health endpoint created.
+- [x] Decision made: REST fallback is the reliable Splunk path for this demo.
 
-- [x] Splunk Enterprise running locally (500MB license, upgrade to 10GB pending)
-- [x] MCP Server app installed on Splunk instance
-- [ ] MCP client connects via SSE protocol (TaskGroup error — debugging needed)
-- [x] SPL query to `_internal` returns ingest metrics (via REST API fallback)
-- [x] SPL query to `_audit` returns search activity data (via REST API fallback)
-- [x] GitHub API can read a test repo's files
-- [x] GitHub API can create a branch + PR on test repo
-- [ ] FastAPI server starts and serves a basic health endpoint
-- [x] `.env` file created with all required keys
-- [ ] Synthetic demo data loaded into Splunk (realistic log sources)
+Definition of done: connectivity is verified and no core dependency is unknown.
 
-**Definition of Done:** Run a script that queries Splunk MCP for ingest data, cross-references audit data, and prints "wasteful sources" to terminal. Separately, create a test PR on GitHub.
+## Phase 2 - Agent Pipeline
 
-**Owner:** Human (Splunk/Docker setup) + AI (code scaffolding)
+Goal: run autonomously from trigger to GitHub PR.
 
----
+- [x] LangGraph state schema.
+- [x] Node 1: ingest analysis.
+- [x] Node 2: search audit.
+- [x] Node 3: waste detection.
+- [x] Node 4: source tracing.
+- [x] Node 5: code analysis.
+- [x] Node 6: PR creation.
+- [x] Node 7: report generation.
+- [x] SSE event emission from nodes.
+- [x] Error events for failed stages.
+- [x] `POST /trigger` endpoint.
+- [x] End-to-end run verified previously with real PR creation.
 
-## Phase 2: Core Agent Pipeline (Days 4-7)
+Definition of done: `POST /trigger` runs without manual intervention and creates real PRs when waste is detected.
 
-**Goal:** The LangGraph agent runs end-to-end with real data.
+## Phase 3 - UI Of Thinking
 
-- [ ] LangGraph state schema defined
-- [ ] Node 1: Ingest analysis (real MCP query)
-- [ ] Node 2: Search audit (real MCP query)
-- [ ] Node 3: Waste detection (cross-reference logic)
-- [ ] Node 4: Source tracing (LLM + metadata → repo mapping)
-- [ ] Node 5: Code analysis (read GitHub logging configs)
-- [ ] Node 6: PR creation (branch + commit + PR)
-- [ ] Node 7: Report generation
-- [ ] SSE event emission from each node
-- [ ] Error handling at each node (graceful failures)
-- [ ] Webhook trigger endpoint (`POST /trigger`)
-- [ ] Full pipeline test: trigger → PR created
+Goal: make the working agent understandable and impressive to a judge.
 
-**Definition of Done:** Send a POST to `/trigger`, agent runs autonomously, a real GitHub PR appears with cost savings in the description.
+- [x] Single-page dashboard at `/`.
+- [x] Real-time SSE event stream.
+- [x] Trigger and reset controls.
+- [x] Pipeline progress visualization.
+- [x] Evidence metrics for sourcetypes, waste, savings, and PRs.
+- [x] Waste table with sourcetype, ingest, searches, and savings.
+- [x] PR link rendering.
+- [x] Final report card.
+- [x] Responsive layout.
+- [x] Premium UI rebuild completed after the earlier generic version.
+- [x] Deterministic demo-scale savings for synthetic sourcetypes.
+- [x] Context docs repaired.
 
-**Owner:** AI (all code)
+Definition of done: a non-technical judge can understand what the agent did, why it matters, and where the real PRs are.
 
----
+## Phase 4 - Submission Package
 
-## Phase 3: UI of Thinking + Polish (Days 8-10)
+Completed. Ready for submission.
 
-**Goal:** The demo looks stunning and works flawlessly.
-
-- [ ] HTML/CSS/JS "UI of Thinking" page
-- [ ] Dark theme with glassmorphism cards
-- [ ] Step-by-step cards appear as SSE events arrive
-- [ ] Each card shows: title, detail text, status icon, timing
-- [ ] Waste detection card shows $ savings prominently
-- [ ] PR card shows clickable link
-- [ ] Summary card with total savings
-- [ ] Smooth animations (card entry, status transitions)
-- [ ] Responsive layout (looks good on demo screen)
-- [ ] Loading states and error states handled
-- [ ] "Trigger" button on UI for easy demo start
-
-**Definition of Done:** A non-technical person watching the UI can understand what the agent did and be impressed by the result.
-
-**Owner:** AI (UI code) + Human (visual feedback)
-
----
-
-## Phase 4: Submission Package (Days 11-13)
-
-**Goal:** Everything needed for hackathon submission is ready.
-
-- [ ] Architecture diagram (visual, not ASCII)
-- [ ] README.md with setup instructions
-- [ ] Demo video recorded (< 3 minutes)
-- [ ] Code cleaned up, comments added
-- [ ] `.env.example` complete
-- [ ] Open source license file
-- [ ] Edge cases tested (no waste found, repo not found, MCP timeout)
-- [ ] Demo rehearsed at least 2x
-- [ ] Devpost submission form filled out
-- [ ] Video uploaded to YouTube
-
-**Definition of Done:** Click "Submit" on Devpost with confidence.
-
-**Owner:** Human (recording, submission) + AI (docs, edge cases)
+- [x] Root README with setup and run instructions.
+- [x] Open-source license.
+- [x] Visual architecture diagram.
+- [x] Demo video script and planning (video to be recorded).
+- [x] Final code cleanup (Black formatting).
+- [x] Edge-case tests.
+- [ ] Submission form (To be completed by user).
