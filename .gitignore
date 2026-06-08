@@ -1,10 +1,12 @@
-hackathon-context/
-planning/demo-script.md
-resources/
-planning/judging-alignment.md
-
 # Secrets
 .env
+.env.example
+
+# Internal strategy docs (not for public repo)
+hackathon-context/
+planning/judging-alignment.md
+planning/demo-script.md
+resources/
 
 # Python
 __pycache__/
@@ -13,11 +15,25 @@ __pycache__/
 venv/
 .venv/
 *.egg-info/
+dist/
+build/
+.eggs/
 
 # IDE
 .idea/
 .vscode/
 *.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Server logs (generated at runtime)
+server.*.err
+server.*.out
+*.log
 
 # Demo files (not part of submission)
 demo-repo-files/

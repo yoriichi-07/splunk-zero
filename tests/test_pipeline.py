@@ -10,7 +10,6 @@ Usage:
 import sys
 import os
 import json
-import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -19,28 +18,46 @@ import httpx
 BASE_URL = "http://localhost:8888"
 
 
+import pytest
+
+def _is_server_running():
+    try:
+        r = httpx.get(f"{BASE_URL}/health", timeout=1)
+        return r.status_code == 200
+    except Exception:
+        return False
+
+
 def test_health():
     """Test the health endpoint."""
     print("\n" + "=" * 60)
     print("  Splunk Zero -- Pipeline Test")
     print("=" * 60)
 
+    if not _is_server_running():
+        pytest.skip("FastAPI server is not running on localhost:8888")
+
     print("\n[1] Testing /health...")
     r = httpx.get(f"{BASE_URL}/health", timeout=10)
     data = r.json()
     print(f"    Status: {data['status']}")
     print(f"    Splunk: {data['splunk']['status']}")
-    if data['splunk'].get('server_name'):
-        print(f"    Server: {data['splunk']['server_name']} v{data['splunk'].get('version', '?')}")
-    return data['status'] == 'healthy'
+    if data["splunk"].get("server_name"):
+        print(
+            f"    Server: {data['splunk']['server_name']} v{data['splunk'].get('version', '?')}"
+        )
+    assert data["status"] == "healthy"
 
 
 def test_trigger_and_stream():
     """Trigger a run and stream events."""
+    if not _is_server_running():
+        pytest.skip("FastAPI server is not running on localhost:8888")
+
     print("\n[2] Triggering pipeline run...")
     r = httpx.post(f"{BASE_URL}/trigger", timeout=10)
     data = r.json()
-    run_id = data['run_id']
+    run_id = data["run_id"]
     print(f"    Run ID: {run_id}")
     print(f"    Events URL: {data['events_url']}")
 
@@ -48,7 +65,9 @@ def test_trigger_and_stream():
 
     event_count = 0
     try:
-        with httpx.stream('GET', f"{BASE_URL}/events/{run_id}", timeout=120) as response:
+        with httpx.stream(
+            "GET", f"{BASE_URL}/events/{run_id}", timeout=120
+        ) as response:
             for line in response.iter_lines():
                 line = line.strip()
 
@@ -64,37 +83,37 @@ def test_trigger_and_stream():
                     try:
                         event = json.loads(json_str)
                         event_count += 1
-                        step = event.get('step', '?')
-                        status = event.get('status', '?')
-                        title = event.get('title', '?')
-                        detail = event.get('detail', '')
+                        step = event.get("step", "?")
+                        status = event.get("status", "?")
+                        title = event.get("title", "?")
+                        detail = event.get("detail", "")
 
                         # Format status indicator
-                        if status == 'running':
-                            indicator = '[..]'
-                        elif status == 'complete':
-                            indicator = '[OK]'
-                        elif status == 'error':
-                            indicator = '[!!]'
-                        elif status == 'info':
-                            indicator = '[--]'
+                        if status == "running":
+                            indicator = "[..]"
+                        elif status == "complete":
+                            indicator = "[OK]"
+                        elif status == "error":
+                            indicator = "[!!]"
+                        elif status == "info":
+                            indicator = "[--]"
                         else:
-                            indicator = '[??]'
+                            indicator = "[??]"
 
                         print(f"    {indicator} {title}")
                         if detail:
                             print(f"         {detail[:100]}")
 
                         # Print data highlights
-                        event_data = event.get('data', {})
-                        if 'total_monthly_savings' in event_data:
-                            savings = event_data['total_monthly_savings']
+                        event_data = event.get("data", {})
+                        if "total_monthly_savings" in event_data:
+                            savings = event_data["total_monthly_savings"]
                             print(f"         >> SAVINGS: ${savings:,.2f}/month")
-                        if 'pr_url' in event_data:
+                        if "pr_url" in event_data:
                             print(f"         >> PR: {event_data['pr_url']}")
 
                         # Stop on completion
-                        if step == 'done':
+                        if step == "done":
                             print("\n    Stream complete.")
                             break
 
@@ -107,16 +126,18 @@ def test_trigger_and_stream():
         print(f"\n    [FAIL] Stream error: {e}")
 
     print(f"\n    Total events received: {event_count}")
-    return event_count > 0
+    assert event_count > 0
 
 
 def main():
-    if test_health():
+    try:
+        test_health()
         test_trigger_and_stream()
-    else:
-        print("\n[FAIL] Health check failed. Is the server running?")
-        print(f"       Expected server at {BASE_URL}")
-        print("       Start with: python -m src.server")
+        print("\n[OK] Pipeline test run complete! All checks passed.")
+    except AssertionError as e:
+        print(f"\n[FAIL] Health check or assertion failed: {e}")
+    except Exception as e:
+        print(f"\n[FAIL] Pipeline test failed: {e}")
 
     print("\n" + "=" * 60)
     print("  Test Complete")
@@ -125,3 +146,13 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def test_route_after_waste_detection():
+    from src.agent.graph import _route_after_waste_detection
+
+    state_no_waste = {"waste_found": False}
+    assert _route_after_waste_detection(state_no_waste) == "report"
+
+    state_waste = {"waste_found": True}
+    assert _route_after_waste_detection(state_waste) == "source_tracing"
