@@ -55,7 +55,6 @@ async def waste_detection(state: dict) -> dict:
     run_id = state.get("run_id", "")
     ingest_data = state.get("ingest_by_source", [])
     search_data = state.get("search_activity", [])
-    total_daily_gb = state.get("total_daily_gb", 0.0)
 
     threshold_pct = Config.WASTE_THRESHOLD_PCT
     min_searches = Config.MIN_SEARCH_COUNT

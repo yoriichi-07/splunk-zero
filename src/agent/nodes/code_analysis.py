@@ -7,7 +7,6 @@ Generates the modified config file content and a human-readable diff summary.
 """
 
 import json
-from datetime import datetime, timezone
 from src.config import Config
 from src.github.client import GitHubClient
 from src.ui.events import event_manager
@@ -141,7 +140,8 @@ async def _analyze_and_propose(
     """
     llm = ChatGoogleGenerativeAI(
         model=Config.LLM_MODEL,
-        google_api_key=Config.GOOGLE_API_KEY,
+        project=Config.GCP_PROJECT,
+        location=Config.GCP_LOCATION,
         temperature=0.0,
     )
 

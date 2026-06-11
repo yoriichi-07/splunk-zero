@@ -10,7 +10,6 @@ For each proposed change:
 3. Opens a PR with an auto-generated description including cost savings
 """
 
-from datetime import datetime, timezone
 from src.config import Config
 from src.github.client import GitHubClient
 from src.ui.events import event_manager
@@ -63,12 +62,12 @@ async def pr_creation(state: dict) -> dict:
             await event_manager.emit(
                 run_id,
                 step="creating_branch",
-                title=f"Creating Branch",
+                title="Creating Branch",
                 detail=f"Branch: {branch_name}",
                 status="info",
             )
 
-            branch_result = github_client.create_branch(repo, branch_name)
+            github_client.create_branch(repo, branch_name)
 
             # Step 2: Commit the change
             commit_msg = (

@@ -10,7 +10,6 @@ sourcetypes to the demo repo. In production, this would be entirely LLM-driven.
 """
 
 import json
-from datetime import datetime, timezone
 from src.config import Config
 from src.ui.events import event_manager
 from src.github.client import GitHubClient
@@ -155,7 +154,8 @@ async def _llm_trace_source(sourcetype: str, default_repo: str) -> dict:
 
     llm = ChatGoogleGenerativeAI(
         model=Config.LLM_MODEL,
-        google_api_key=Config.GOOGLE_API_KEY,
+        project=Config.GCP_PROJECT,
+        location=Config.GCP_LOCATION,
         temperature=0.0,
     )
 
