@@ -22,7 +22,6 @@ import time
 import random
 import string
 import httpx
-from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 # Add project root to path
@@ -219,14 +218,14 @@ def load_synthetic_data():
     print(f"\n  {'=' * 50}")
     print(f"  DONE! Sent {total_events} events across {total_sources} sourcetypes.")
     print(f"  {'=' * 50}")
-    print(f"\n  These will appear in Splunk's _internal metrics within ~60 seconds.")
-    print(f"  Verify in Splunk Web:")
+    print("\n  These will appear in Splunk's _internal metrics within ~60 seconds.")
+    print("  Verify in Splunk Web:")
     print(
-        f"    Search: index=_internal source=*metrics.log group=per_sourcetype_thruput"
+        "    Search: index=_internal source=*metrics.log group=per_sourcetype_thruput"
     )
-    print(f"            | stats sum(kb) as total_kb by series | sort - total_kb")
-    print(f"\n  Since nobody will search for these sourcetypes, the agent will")
-    print(f"  detect them as wasteful when it runs.\n")
+    print("            | stats sum(kb) as total_kb by series | sort - total_kb")
+    print("\n  Since nobody will search for these sourcetypes, the agent will")
+    print("  detect them as wasteful when it runs.\n")
 
     return True
 

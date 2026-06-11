@@ -17,14 +17,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
-
-load_dotenv(Path(__file__).parent.parent / ".env")
-
-from github import Github
-
+from github import Github, Auth
 
 def reset_demo():
     """Reset the demo repo to a clean state."""
+    load_dotenv(Path(__file__).parent.parent / ".env")
     token = os.getenv("GITHUB_TOKEN", "")
     repo_name = os.getenv("GITHUB_REPO", "")
 
@@ -36,7 +33,7 @@ def reset_demo():
     print("  Splunk Zero -- Demo Reset")
     print("=" * 50)
 
-    g = Github(token)
+    g = Github(auth=Auth.Token(token))
     repo = g.get_repo(repo_name)
 
     # 1. Reset logging.conf to all DEBUG
