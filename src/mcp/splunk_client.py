@@ -67,22 +67,51 @@ class SplunkMCPClient:
 
     @asynccontextmanager
     async def _mcp_session(self):
-        """Create an MCP client session via SSE transport."""
+        """Create an MCP client session via HTTP POST transport (Splunk MCP server protocol)."""
         if not HAS_MCP_SDK:
             raise RuntimeError("MCP SDK not installed. pip install mcp")
 
-        # Custom httpx client factory that skips SSL verification (local dev)
-        def _no_verify_client_factory(**kwargs):
-            return httpx.AsyncClient(verify=False, **kwargs)
+        import anyio
+        import mcp.types as types
+        from mcp.shared.message import SessionMessage
 
-        async with sse_client(
-            url=self.mcp_url,
-            headers=self.mcp_headers,
-            httpx_client_factory=_no_verify_client_factory,
-        ) as (read_stream, write_stream):
-            async with ClientSession(read_stream, write_stream) as session:
-                await session.initialize()
-                yield session
+        read_stream_writer, read_stream = anyio.create_memory_object_stream(0)
+        write_stream, write_stream_reader = anyio.create_memory_object_stream(0)
+
+        async with anyio.create_task_group() as tg:
+            async with httpx.AsyncClient(verify=self.verify_ssl, headers=self.mcp_headers) as client:
+                async def post_writer_and_reader():
+                    try:
+                        async with write_stream_reader:
+                            async for session_message in write_stream_reader:
+                                response = await client.post(
+                                    self.mcp_url,
+                                    json=session_message.message.model_dump(
+                                        by_alias=True,
+                                        mode="json",
+                                        exclude_none=True,
+                                    ),
+                                )
+                                response.raise_for_status()
+                                
+                                try:
+                                    resp_json = response.json()
+                                    message = types.JSONRPCMessage.model_validate(resp_json)
+                                    await read_stream_writer.send(SessionMessage(message))
+                                except Exception as exc:
+                                    await read_stream_writer.send(exc)
+                    except Exception as exc:
+                        await read_stream_writer.send(exc)
+                    finally:
+                        await read_stream_writer.aclose()
+                        await write_stream.aclose()
+
+                tg.start_soon(post_writer_and_reader)
+                
+                async with ClientSession(read_stream, write_stream) as session:
+                    await session.initialize()
+                    yield session
+                    tg.cancel_scope.cancel()
 
     async def mcp_list_tools(self) -> list:
         """List all available MCP tools via proper MCP protocol."""
@@ -98,7 +127,19 @@ class SplunkMCPClient:
 
     async def mcp_health_check(self) -> dict:
         """Check MCP server health via tool call."""
-        return await self.mcp_call_tool("health_check")
+        result = await self.mcp_call_tool("splunk_get_info")
+        if hasattr(result, "content") and result.content:
+            text = result.content[0].text
+            data = json.loads(text)
+            results = data.get("results", [{}])
+            content = results[0] if results else {}
+            return {
+                "status": "healthy",
+                "server_name": content.get("serverName", "unknown"),
+                "version": content.get("version", "unknown"),
+                "os": content.get("os_name", "unknown"),
+            }
+        return {"status": "unhealthy", "error": "No response content"}
 
     async def mcp_run_query(
         self,
@@ -108,19 +149,38 @@ class SplunkMCPClient:
         max_results: int = 100,
     ) -> dict:
         """Execute an SPL query via MCP Server."""
-        return await self.mcp_call_tool(
+        result = await self.mcp_call_tool(
             "splunk_run_query",
             {
-                "search_query": spl_query,
+                "query": spl_query,
                 "earliest_time": earliest_time,
                 "latest_time": latest_time,
-                "max_results": max_results,
+                "row_limit": max_results,
             },
         )
+        if hasattr(result, "content") and result.content:
+            text = result.content[0].text
+            return json.loads(text)
+        return {"results": []}
 
     async def mcp_get_indexes(self) -> dict:
         """List all accessible indexes via MCP."""
-        return await self.mcp_call_tool("splunk_get_indexes")
+        result = await self.mcp_call_tool("splunk_get_indexes")
+        if hasattr(result, "content") and result.content:
+            text = result.content[0].text
+            data = json.loads(text)
+            results = data.get("results", [])
+            return {
+                "indexes": [
+                    {
+                        "name": r.get("title", r.get("name", "unknown")),
+                        "totalEventCount": r.get("totalEventCount", "N/A"),
+                        "currentDBSizeMB": r.get("currentDBSizeMB", "N/A"),
+                    }
+                    for r in results
+                ]
+            }
+        return {"indexes": []}
 
     # ========================================================
     # Splunk REST API Methods (Fallback)
