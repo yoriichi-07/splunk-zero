@@ -11,7 +11,7 @@ Wraps PyGithub for the specific operations Splunk Zero needs:
 All methods return structured dicts for clean integration with agent nodes.
 """
 
-from github import Github, GithubException
+from github import Github, GithubException, Auth
 from typing import Optional
 
 
@@ -45,7 +45,7 @@ class GitHubClient:
     """
 
     def __init__(self, token: str):
-        self._github = Github(token)
+        self._github = Github(auth=Auth.Token(token))
         self._user = None
 
     @property

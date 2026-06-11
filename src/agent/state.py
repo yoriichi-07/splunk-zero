@@ -7,7 +7,7 @@ The 'events' field uses Annotated[list, add] so each node
 can append events without overwriting previous ones.
 """
 
-from typing import TypedDict, Annotated, Optional
+from typing import TypedDict, Annotated
 from operator import add
 
 
