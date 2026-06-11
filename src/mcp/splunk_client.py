@@ -10,6 +10,7 @@ Fallback: If MCP fails, we can use the Splunk REST API directly.
 import json
 import httpx
 from contextlib import asynccontextmanager
+from langchain_core.tools import StructuredTool
 
 # Try MCP SDK first, fallback to REST
 try:
@@ -274,6 +275,100 @@ class SplunkMCPClient:
                 print("  Falling back to REST API...")
 
         return await self.rest_get_indexes()
+
+    # ========================================================
+    # LangChain Integration
+    # ========================================================
+
+    def get_langchain_tools(self) -> list[StructuredTool]:
+        """
+        Returns LangChain-compatible tools that wrap the Splunk operations.
+        This enables Gemini to autonomously use the Splunk MCP server (or its REST fallback)
+        to investigate data, fulfilling the true agentic pattern required for the MCP track.
+        """
+        async def run_query_tool(
+            search_query: str,
+            earliest_time: str = "-30d",
+            latest_time: str = "now",
+            max_results: int = 100
+        ) -> str:
+            """Run an SPL query on Splunk to retrieve data. Use this tool to query Splunk indexes like _internal or _audit."""
+            result = await self.run_query(search_query, earliest_time, latest_time, max_results)
+            return json.dumps(result)
+
+        async def get_indexes_tool() -> str:
+            """Get a list of all accessible Splunk indexes."""
+            result = await self.get_indexes()
+            return json.dumps(result)
+
+        return [
+            StructuredTool.from_function(
+                coroutine=run_query_tool,
+                name="splunk_run_query",
+                description="Run an SPL query on Splunk to retrieve data. Requires 'search_query' parameter.",
+            ),
+            StructuredTool.from_function(
+                coroutine=get_indexes_tool,
+                name="splunk_get_indexes",
+                description="Get a list of all accessible Splunk indexes.",
+            )
+        ]
+
+    async def get_mcp_tool_names(self) -> dict:
+        """
+        Probe the Splunk MCP Server and return info about available tools.
+        Used by /mcp-tools endpoint and health checks to prove MCP connectivity.
+
+        Returns:
+            {
+                "mcp_connected": bool,
+                "transport": "mcp_sse" | "rest_fallback",
+                "tools": [{"name": ..., "description": ...}],
+                "tool_count": int,
+                "error": str | None
+            }
+        """
+        if HAS_MCP_SDK:
+            try:
+                tools = await self.mcp_list_tools()
+                return {
+                    "mcp_connected": True,
+                    "transport": "mcp_sse",
+                    "tools": [
+                        {
+                            "name": t.name if hasattr(t, "name") else str(t),
+                            "description": (t.description[:100] if hasattr(t, "description") and t.description else ""),
+                        }
+                        for t in tools
+                    ],
+                    "tool_count": len(tools),
+                    "error": None,
+                }
+            except Exception as mcp_err:
+                # MCP transport failed — document the fallback
+                return {
+                    "mcp_connected": False,
+                    "transport": "rest_fallback",
+                    "tools": [
+                        {"name": "splunk_run_query", "description": "Run SPL queries via Splunk REST API"},
+                        {"name": "splunk_get_indexes", "description": "List accessible Splunk indexes via REST API"},
+                    ],
+                    "tool_count": 2,
+                    "error": str(mcp_err),
+                    "note": "MCP SDK installed but SSE transport unavailable on this host. Using reliable REST fallback.",
+                }
+        else:
+            return {
+                "mcp_connected": False,
+                "transport": "rest_fallback",
+                "tools": [
+                    {"name": "splunk_run_query", "description": "Run SPL queries via Splunk REST API"},
+                    {"name": "splunk_get_indexes", "description": "List accessible Splunk indexes via REST API"},
+                ],
+                "tool_count": 2,
+                "error": "MCP SDK not installed",
+                "note": "Install with: pip install mcp",
+            }
 
     # ========================================================
     # Splunk Zero Specific Queries
