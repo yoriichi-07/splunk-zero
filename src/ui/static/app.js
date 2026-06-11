@@ -8,6 +8,8 @@ const STEP_MAP = {
     querying_ingest: "ingest_analysis",
     ingest_complete: "ingest_analysis",
     ingest_error: "ingest_analysis",
+    mcp_tools_ready: "ingest_analysis",
+    mcp_tool_called: null,
     querying_audit: "search_audit",
     audit_complete: "search_audit",
     audit_error: "search_audit",
@@ -50,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function checkHealth() {
     const indicator = document.getElementById("serverStatus");
+    const mcpIndicator = document.getElementById("mcpStatus");
 
     try {
         const res = await fetch(`${BASE_URL}/health`);
@@ -65,9 +68,25 @@ async function checkHealth() {
             indicator.className = "health-pill error";
             indicator.querySelector("span:last-child").textContent = "Config Issue";
         }
+
+        // Update MCP status pill
+        if (mcpIndicator && data.mcp) {
+            const mcp = data.mcp;
+            if (mcp.mcp_connected) {
+                mcpIndicator.className = "health-pill healthy";
+                mcpIndicator.querySelector("span:last-child").textContent = `MCP: ${mcp.tool_count} tools`;
+            } else {
+                mcpIndicator.className = "health-pill warn";
+                mcpIndicator.querySelector("span:last-child").textContent = `MCP: REST fallback (${mcp.tool_count} tools)`;
+            }
+        }
     } catch (error) {
         indicator.className = "health-pill error";
         indicator.querySelector("span:last-child").textContent = "Offline";
+        if (mcpIndicator) {
+            mcpIndicator.className = "health-pill error";
+            mcpIndicator.querySelector("span:last-child").textContent = "MCP: unknown";
+        }
     }
 }
 
@@ -281,6 +300,32 @@ function addEventCard(event) {
 function renderEventCard(event) {
     const { step, title, detail, status, data, timestamp } = event;
     let extraHTML = "";
+
+    // Special rendering for MCP tool events
+    if (step === "mcp_tools_ready" || step === "mcp_tool_called") {
+        const transport = data?.transport || "unknown";
+        const isMcpDirect = transport === "mcp_sse";
+        const transportBadge = isMcpDirect
+            ? `<span class="mcp-badge mcp-live">MCP SSE</span>`
+            : `<span class="mcp-badge mcp-rest">REST fallback</span>`;
+
+        let toolsList = "";
+        if (Array.isArray(data?.tools) && data.tools.length > 0) {
+            toolsList = `<div class="mcp-tools-list">${data.tools.map(t => `<code>${escapeHtml(t)}</code>`).join(" ")}</div>`;
+        }
+        const toolInfo = data?.tool ? `<div class="mcp-tool-call">⚡ Tool: <code>${escapeHtml(data.tool)}</code> on <code>${escapeHtml(data.index || "")}</code></div>` : "";
+
+        return `
+            <div class="event-card-header">
+                <span class="event-title">${escapeHtml(title || "")}</span>
+                ${transportBadge}
+            </div>
+            ${detail ? `<div class="event-detail">${escapeHtml(detail)}</div>` : ""}
+            ${toolsList}
+            ${toolInfo}
+            <div class="event-timestamp">${formatTime(timestamp)}</div>
+        `;
+    }
 
     if (data?.pr_url) {
         extraHTML += renderPrLink(data.pr_url, `PR #${data.pr_number || ""}`.trim(), data.title || "View Pull Request");

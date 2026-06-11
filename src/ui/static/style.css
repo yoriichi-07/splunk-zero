@@ -191,6 +191,76 @@ a {
     box-shadow: 0 0 18px rgba(255, 107, 122, 0.42);
 }
 
+.health-pill.warn .health-dot {
+    background: var(--amber);
+    box-shadow: 0 0 18px rgba(244, 190, 79, 0.42);
+}
+
+.health-pill.warn {
+    color: var(--amber);
+}
+
+/* MCP Badge styles — shown on MCP tool event cards */
+.mcp-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+
+.mcp-badge.mcp-live {
+    color: var(--green);
+    background: var(--green-soft);
+    border: 1px solid rgba(63, 240, 138, 0.28);
+}
+
+.mcp-badge.mcp-rest {
+    color: var(--amber);
+    background: var(--amber-soft);
+    border: 1px solid rgba(244, 190, 79, 0.28);
+}
+
+/* MCP tool list inside event cards */
+.mcp-tools-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.mcp-tools-list code {
+    padding: 2px 7px;
+    border: 1px solid var(--line-strong);
+    border-radius: 4px;
+    background: rgba(185, 156, 255, 0.08);
+    color: var(--violet);
+    font-family: var(--mono);
+    font-size: 0.74rem;
+}
+
+/* MCP tool call line */
+.mcp-tool-call {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.78rem;
+}
+
+.mcp-tool-call code {
+    color: var(--blue);
+}
+
+/* MCP tool event card gets a special left border */
+.event-card.status-info {
+    border-left-color: var(--violet);
+}
+
 .workspace {
     display: flex;
     flex-direction: column;
