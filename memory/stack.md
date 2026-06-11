@@ -10,7 +10,7 @@
 | Agent orchestration | LangGraph |
 | Splunk access | Splunk MCP client code with REST fallback |
 | GitHub access | PyGithub |
-| LLM | Google AI Studio Gemini |
+| LLM | Google Vertex AI (Gemini via ADC) |
 | Streaming | Server-Sent Events |
 
 ## Frontend
@@ -37,7 +37,8 @@ Required:
 - `SPLUNK_PASSWORD`
 - `GITHUB_TOKEN`
 - `GITHUB_REPO`
-- `GOOGLE_API_KEY`
+- `GCP_PROJECT`
+- `GCP_LOCATION`
 
 Useful demo settings:
 

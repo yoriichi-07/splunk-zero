@@ -52,9 +52,9 @@ Production note: use a scoped role with access to the required indexes.
 
 ## 9. LLM
 
-Use Google AI Studio Gemini Flash.
+Use Google Vertex AI (Gemini 2.5 Flash / 3.1 Flash Lite).
 
-Why: repository mapping, config change generation, and PR text are lightweight reasoning tasks.
+Why: repository mapping, config change generation, and PR text are lightweight reasoning tasks. Using Vertex AI allows us to securely authenticate via Application Default Credentials (ADC) rather than managing raw API keys.
 
 ## 10. Remediation Safety
 

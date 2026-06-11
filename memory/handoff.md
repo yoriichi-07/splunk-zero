@@ -4,7 +4,7 @@
 
 Splunk Zero is an autonomous cost-optimization agent for Splunk. It queries Splunk ingest and search metadata, identifies unused high-noise app logs, maps them to GitHub logging configs, and opens PRs that reduce DEBUG logging.
 
-Current scope is complete through Phase 4. The project is fully built and ready for submission.
+Current scope is complete through Phase 4 + MCP Enhancement. The project is fully built and ready for submission.
 
 ## Quick Start
 
@@ -21,13 +21,13 @@ Then open `http://localhost:8888`.
 1. User starts a run in the UI.
 2. `POST /trigger` creates a run id and event queue.
 3. LangGraph executes seven nodes:
-   - ingest analysis
-   - search audit
-   - waste detection
-   - source tracing
-   - code analysis
-   - PR creation
-   - report
+   - ingest analysis (Gemini + MCP tools → `_internal`)
+   - search audit (Gemini + MCP tools → `_audit`)
+   - waste detection (pure Python, no LLM)
+   - source tracing (Gemini maps sourcetype → GitHub repo)
+   - code analysis (Gemini reads config, proposes change)
+   - PR creation (GitHub branch + commit + PR)
+   - report (final SSE summary)
 4. Each node emits SSE events through `src/ui/events.py`.
 5. Browser renders the live "UI of Thinking".
 6. GitHub PR links and savings appear in the final report.
@@ -36,48 +36,61 @@ Then open `http://localhost:8888`.
 
 | File | Purpose |
 |---|---|
-| `src/server.py` | FastAPI app, health, trigger, SSE, reset, static UI |
+| `src/server.py` | FastAPI app: /health, /mcp-tools (NEW), /trigger, /events, /reset-demo, static UI |
 | `src/ui/events.py` | Per-run SSE queue manager |
-| `src/ui/static/index.html` | Phase 3 dashboard markup |
-| `src/ui/static/style.css` | Phase 3 dashboard design system |
-| `src/ui/static/app.js` | SSE handling, event rendering, stats, reset |
+| `src/ui/static/index.html` | Dashboard (MCP status pill added) |
+| `src/ui/static/style.css` | Design system (MCP badge styles added) |
+| `src/ui/static/app.js` | SSE handling, MCP event rendering (NEW), stats |
 | `src/agent/graph.py` | LangGraph workflow |
 | `src/agent/state.py` | Agent state schema |
 | `src/agent/nodes/*.py` | Pipeline node implementations |
-| `src/mcp/splunk_client.py` | Splunk MCP/REST client |
+| `src/mcp/splunk_client.py` | Splunk MCP/REST client + `get_mcp_tool_names()` (NEW) |
 | `src/github/client.py` | GitHub API wrapper |
 | `scripts/synthetic_data.py` | Loads demo sourcetypes into Splunk HEC |
 | `scripts/reset_demo.py` | Resets GitHub repo for another demo run |
 
-## Phase 3 State
+## MCP Enhancement (Latest Session)
 
-The earlier Phase 3 UI was functional but generic. It has now been rebuilt as a premium operational dashboard with:
+The MCP integration has been significantly improved to make it visible to judges:
 
-- restrained dark command-center styling
-- evidence-first metrics
-- clear run controls
-- seven-step pipeline rail
-- live event ledger
-- deterministic savings presentation
-- final report with PR links
-- responsive layout
+1. **`GET /mcp-tools` endpoint** — probes Splunk MCP server live, returns all available tools with connectivity status.
+
+2. **`get_mcp_tool_names()` method** on `SplunkMCPClient` — async helper that returns `{mcp_connected, transport, tools, tool_count}`.
+
+3. **MCP events in pipeline** — both `ingest_analysis` and `search_audit` now emit:
+   - `mcp_tools_ready` — shows which transport (MCP SSE or REST fallback) and tool list
+   - `mcp_tool_called` — shows each tool invocation with index name
+
+4. **UI MCP status pill** — topbar now has a second pill showing MCP connectivity status (green=SSE, amber=REST fallback).
+
+5. **UI MCP event rendering** — `mcp_tools_ready` and `mcp_tool_called` events render with special MCP badge styling.
 
 ## Important Gotchas
 
 - Splunk Web may use port `8000`; this app uses `8888`.
-- MCP SSE exists in code but REST fallback is the reliable path on this machine.
+- MCP SSE connection may fail on Windows (TaskGroup/transport issue). The app handles this gracefully with REST fallback. Judges can see which mode is active in the topbar MCP status pill.
 - `.env` contains real secrets and must stay ignored.
-- `.env.example`, `planning/`, `memory/`, `resources/`, and `hackathon-context/` should remain trackable.
+- The project uses Vertex AI (ADC) — ensure `GCP_PROJECT` and `GCP_LOCATION` are set (not `GOOGLE_API_KEY`).
+- `.env.example` has been updated to reflect Vertex AI migration.
 - The demo repo should be reset before every run.
 - Known synthetic sourcetypes:
   - `app:payment-service:debug`
   - `app:user-auth:debug`
   - `app:inventory-api:debug`
+- Temp files `current_diff.patch` and `patch.txt` have been deleted (were left by previous agent).
+
+## Unit Test Status
+
+```
+pytest tests/test_waste_detection.py -v
+→ 27 passed in 6.78s ✅
+```
 
 ## Next Work If User Continues
 
-The development phases are complete. The remaining work is user-led:
+The development phases are complete. The codebase is fully stable.
 
-- Record the demo video using `planning/demo-script.md`
-- Fill out the hackathon submission form
+- Run the demo (start server, click 'Start Investigation' in the UI).
+- Record the demo video using `planning/demo-script.md`.
+- Fill out the hackathon submission form.
 - Celebrate!
