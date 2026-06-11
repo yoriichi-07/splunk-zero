@@ -14,11 +14,9 @@ import json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import httpx
+import pytest
 
 BASE_URL = "http://localhost:8888"
-
-
-import pytest
 
 def _is_server_running():
     try:

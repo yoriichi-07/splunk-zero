@@ -12,8 +12,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.config import Config
-from github import Github, GithubException
-
+from github import Github, GithubException, Auth
 
 import pytest
 
@@ -42,7 +41,7 @@ def test_github_connection():
     print("\n[2/4] Authenticating with GitHub...")
     success = False
     try:
-        g = Github(Config.GITHUB_TOKEN)
+        g = Github(auth=Auth.Token(Config.GITHUB_TOKEN))
         user = g.get_user()
         print(f"  [OK] Authenticated as: {user.login}")
         success = True

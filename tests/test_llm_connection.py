@@ -1,10 +1,5 @@
 """
 Google AI Studio Gemini API Connection Test -- Phase 1 Verification
-
-Tests connection to Google AI Studio Gemini API using langchain-google-genai.
-
-Usage:
-    python -m tests.test_llm_connection
 """
 
 import asyncio
@@ -17,40 +12,35 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.config import Config
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-
 import pytest
 
 @pytest.mark.asyncio
 async def test_llm():
     print("\n" + "=" * 60)
-    print("  Splunk Zero -- LLM (Google AI Studio) Test")
+    print("  Splunk Zero -- LLM (Vertex AI) Test")
     print("=" * 60)
 
-    # Validate config
     Config.print_status()
     missing = Config.validate()
     
-    if __name__ != "__main__":
-        if "GOOGLE_API_KEY" in missing or Config.GOOGLE_API_KEY == "your_gemini_api_key_here":
-            pytest.skip("GOOGLE_API_KEY is not configured")
-
-    if "GOOGLE_API_KEY" in missing:
-        print("[FAIL] GOOGLE_API_KEY is not set. Cannot proceed.")
-        assert False, "GOOGLE_API_KEY is not set"
+    if "GCP_PROJECT" in missing:
+        print("[FAIL] GCP_PROJECT is not set. Cannot proceed.")
+        assert False, "GCP_PROJECT is not set"
 
     print(f"LLM Model to test: {Config.LLM_MODEL}")
-    print("Initializing ChatGoogleGenerativeAI client...")
+    print("Initializing Unified Google GenAI Client (Vertex Mode)...")
 
     success = False
     try:
-        # Initialize the Chat model
+        # Passing 'project' directly triggers Vertex AI mode natively 
+        # in the langchain-google-genai package.
         llm = ChatGoogleGenerativeAI(
             model=Config.LLM_MODEL,
-            google_api_key=Config.GOOGLE_API_KEY,
-            temperature=0.0,
+            project=Config.GCP_PROJECT,
+            location=Config.GCP_LOCATION,
+            temperature=0.0
         )
 
-        # Test call (invoking synchronously or asynchronously)
         print("Sending prompt: 'Say hello and tell me what model you are running on.'")
         response = await llm.ainvoke(
             "Say hello and tell me what model you are running on."
@@ -64,12 +54,10 @@ async def test_llm():
     except Exception as e:
         print(f"\n[FAIL] LLM Test failed: {e}")
         import traceback
-
         traceback.print_exc()
         success = False
 
     assert success is True
-
 
 if __name__ == "__main__":
     asyncio.run(test_llm())
