@@ -31,7 +31,8 @@ class Config:
     GITHUB_BRANCH_PREFIX: str = os.getenv("GITHUB_BRANCH_PREFIX", "splunk-zero")
 
     # LLM
-    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
+    GCP_PROJECT: str = os.getenv("GCP_PROJECT", "splunk-498315")
+    GCP_LOCATION: str = os.getenv("GCP_LOCATION", "us-central1")
     LLM_MODEL: str = os.getenv("LLM_MODEL", "gemini-3.1-flash-lite")
 
     # HEC (HTTP Event Collector) — for synthetic data loading
@@ -55,8 +56,8 @@ class Config:
             missing.append("GITHUB_TOKEN")
         if not cls.GITHUB_REPO:
             missing.append("GITHUB_REPO")
-        if not cls.GOOGLE_API_KEY:
-            missing.append("GOOGLE_API_KEY")
+        if not cls.GCP_PROJECT:
+            missing.append("GCP_PROJECT")
         return missing
 
     @classmethod
@@ -74,7 +75,8 @@ class Config:
         print(f"  MCP URL:        {cls.SPLUNK_MCP_URL}")
         print(f"  GitHub Repo:    {cls.GITHUB_REPO or '[!!] missing'}")
         print(f"  GitHub Token:   {check(cls.GITHUB_TOKEN)}")
-        print(f"  Google API Key: {check(cls.GOOGLE_API_KEY)}")
+        print(f"  GCP Project:    {cls.GCP_PROJECT}")
+        print(f"  GCP Location:   {cls.GCP_LOCATION}")
         print(f"  LLM Model:      {cls.LLM_MODEL}")
         print(f"  Cost/GB/Day:    ${cls.COST_PER_GB_PER_DAY}")
         print(f"  Waste Threshold: {cls.WASTE_THRESHOLD_PCT}%")

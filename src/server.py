@@ -10,7 +10,6 @@ Provides:
 """
 
 import uuid
-import asyncio
 from datetime import datetime, timezone
 
 from fastapi import FastAPI, BackgroundTasks
@@ -53,13 +52,14 @@ if static_dir.exists():
 async def health_check():
     """
     System health check.
-    Validates config and optionally tests Splunk connectivity.
+    Validates config, tests Splunk REST connectivity, and probes MCP tool availability.
     """
     missing = Config.validate()
 
-    # Quick Splunk connectivity test
+    # Quick Splunk REST connectivity test
     splunk_status = "unknown"
     splunk_info = {}
+    mcp_info = {}
     try:
         client = SplunkMCPClient(
             host=Config.SPLUNK_HOST,
@@ -71,6 +71,9 @@ async def health_check():
         health = await client.rest_health_check()
         splunk_status = "healthy"
         splunk_info = health
+
+        # Probe MCP server for available tools
+        mcp_info = await client.get_mcp_tool_names()
     except Exception as e:
         splunk_status = f"error: {str(e)}"
 
@@ -88,6 +91,7 @@ async def health_check():
                 "status": splunk_status,
                 **splunk_info,
             },
+            "mcp": mcp_info,
         }
     )
 
@@ -143,13 +147,49 @@ async def _run_pipeline(run_id: str):
         }
 
         # Run the LangGraph pipeline
-        result = await splunk_zero_graph.ainvoke(initial_state)
+        await splunk_zero_graph.ainvoke(initial_state)
 
         # Signal stream completion
         await event_manager.complete(run_id)
 
     except Exception as e:
         await event_manager.error(run_id, f"Pipeline failed: {str(e)}")
+
+
+# ── MCP Tools Discovery ──────────────────────────────────
+@app.get("/mcp-tools")
+async def mcp_tools():
+    """
+    Probe the Splunk MCP Server and return its available tools.
+
+    This endpoint demonstrates live MCP connectivity.
+    In agentic mode, Gemini autonomously calls these tools during investigations.
+    If MCP SSE transport is unavailable, the REST API fallback is documented here.
+    """
+    try:
+        client = SplunkMCPClient(
+            host=Config.SPLUNK_HOST,
+            port=Config.SPLUNK_PORT,
+            token=Config.SPLUNK_TOKEN,
+            username=Config.SPLUNK_USERNAME,
+            password=Config.SPLUNK_PASSWORD,
+        )
+        mcp_status = await client.get_mcp_tool_names()
+        return JSONResponse({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "splunk_mcp_url": Config.SPLUNK_MCP_URL,
+            **mcp_status,
+            "agent_usage": (
+                "Gemini creates a react_agent with these tools. During each investigation, "
+                "the agent autonomously decides which tool to call and with what SPL query. "
+                "This is the agentic MCP pattern: AI orchestrating Splunk data access."
+            ),
+        })
+    except Exception as e:
+        return JSONResponse(
+            {"status": "error", "message": str(e)},
+            status_code=500,
+        )
 
 
 # ── Demo Reset ───────────────────────────────────────────
