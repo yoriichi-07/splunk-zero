@@ -9,3 +9,5 @@ python-dotenv
 httpx
 pydantic
 pytest
+mcp
+anyio

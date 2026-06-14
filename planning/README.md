@@ -4,12 +4,13 @@ Splunk Zero is an autonomous agent for the Splunk Agentic Ops Hackathon. It anal
 
 ## Current Boundary
 
-Work is complete through Phase 3 only:
+Work is complete through Phase 4 + MCP Enhancement:
 
 - Phase 1: connectivity and environment verified.
 - Phase 2: backend agent pipeline working end to end.
-- Phase 3: UI of Thinking built and repaired in this session.
-- Phase 4: submission package is intentionally not started here.
+- Phase 3: UI of Thinking built and repaired.
+- Phase 4: submission package complete.
+- MCP Enhancement: native HTTP POST transport, green status verified.
 
 ## Session Workflow
 

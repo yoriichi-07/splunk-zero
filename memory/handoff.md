@@ -86,11 +86,26 @@ pytest tests/test_waste_detection.py -v
 → 27 passed in 6.78s ✅
 ```
 
-## Next Work If User Continues
+## Final Polish Session (Latest)
 
-The development phases are complete. The codebase is fully stable.
+11 fixes applied in final submission prep:
 
-- Run the demo (start server, click 'Start Investigation' in the UI).
-- Record the demo video using `planning/demo-script.md`.
-- Fill out the hackathon submission form.
+1. **Renamed** `architecture.png` → `architecture_diagram.png` (submission required exact name)
+2. **Unignored** `.env.example` from `.gitignore` (judges need the template)
+3. **Fixed README** — removed wrong `GOOGLE_API_KEY`, added correct `GCP_PROJECT`/`GCP_LOCATION`
+4. **Fixed README prerequisites** — was "Google AI Studio" → now "Vertex AI via ADC"
+5. **Fixed `config.py`** — default `APP_PORT` changed from `8000` → `8888`
+6. **Added `mcp` and `anyio`** to `requirements.txt` (were imported but not listed)
+7. **Unified `LLM_MODEL`** default to `gemini-2.5-flash` across all files
+8. **README rewrite** with `<details>` collapsible sections (premium/professional)
+9. **Added `.benchmarks/` and `scripts/scratch/`** to `.gitignore`
+10. **Updated `planning/README.md`** to reflect Phase 4 complete
+11. **Created `architecture_diagram.md`** with comprehensive Mermaid flowchart
+
+## Next Steps
+
+- Push final changes to GitHub.
+- Record demo video (< 3 minutes, on YouTube/Vimeo).
+- Fill out hackathon submission form.
 - Celebrate!
+

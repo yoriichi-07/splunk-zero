@@ -75,3 +75,26 @@ Project is complete. The only remaining tasks are user-led: recording the demo v
 ## Session Summary - 2026-06-11 (MCP Connection Fix)
 
 Probed Splunk MCP server endpoint -> identified `405 Method Not Allowed` on GET requests -> determined that Splunk MCP is a JSON-RPC over HTTP POST endpoint -> implemented custom HTTP POST transport in `splunk_client.py` using `anyio` memory streams -> mapped tool arguments and output formats to REST schema -> verified that MCP connects and queries Splunk successfully -> verified live server `/mcp-tools` returns green status -> updated `walkthrough.md` and `task.md` -> ran unit tests.
+
+## Session Summary - 2026-06-14 (Final Submission Polish)
+
+Read every file in the project end-to-end. Identified 7 critical issues and 4 non-critical items:
+
+**Critical fixes applied:**
+1. Renamed `architecture.png` → `architecture_diagram.png` (submission name requirement)
+2. Removed `.env.example` from `.gitignore` (judges need the template)
+3. Fixed README config table: `GOOGLE_API_KEY` → `GCP_PROJECT`/`GCP_LOCATION`
+4. Fixed README prerequisites: "Google AI Studio" → "Vertex AI via ADC"
+5. Changed default `APP_PORT` from `8000` → `8888` in `config.py`
+6. Added `mcp` and `anyio` to `requirements.txt`
+7. Unified `LLM_MODEL` default to `gemini-2.5-flash`
+
+**Non-critical fixes:**
+8. Rewrote README with collapsible `<details>` sections
+9. Added `.benchmarks/` and `scripts/scratch/` to `.gitignore`
+10. Updated `planning/README.md` to reflect Phase 4 complete
+11. Created `architecture_diagram.md` with Mermaid diagram
+
+All submission requirements verified: license ✅, README ✅, architecture diagram ✅, .env.example ✅, setup instructions ✅, dependencies ✅.
+Remaining user tasks: record demo video, push to GitHub, submit.
+

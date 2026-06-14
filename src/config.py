@@ -33,14 +33,14 @@ class Config:
     # LLM
     GCP_PROJECT: str = os.getenv("GCP_PROJECT", "splunk-498315")
     GCP_LOCATION: str = os.getenv("GCP_LOCATION", "us-central1")
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "gemini-3.1-flash-lite")
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "gemini-2.5-flash")
 
     # HEC (HTTP Event Collector) — for synthetic data loading
     SPLUNK_HEC_TOKEN: str = os.getenv("SPLUNK_HEC_TOKEN", "")
     SPLUNK_HEC_PORT: int = int(os.getenv("SPLUNK_HEC_PORT", "8088"))
 
     # App settings
-    APP_PORT: int = int(os.getenv("APP_PORT", "8000"))
+    APP_PORT: int = int(os.getenv("APP_PORT", "8888"))
     COST_PER_GB_PER_DAY: float = float(os.getenv("COST_PER_GB_PER_DAY", "15"))
     WASTE_THRESHOLD_PCT: float = float(os.getenv("WASTE_THRESHOLD_PCT", "5"))
     MIN_SEARCH_COUNT: int = int(os.getenv("MIN_SEARCH_COUNT", "2"))

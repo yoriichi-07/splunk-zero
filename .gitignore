@@ -1,6 +1,5 @@
 # Secrets
 .env
-.env.example
 
 # Internal strategy docs (not for public repo)
 hackathon-context/
@@ -34,6 +33,12 @@ Thumbs.db
 server.*.err
 server.*.out
 *.log
+
+# Benchmarks
+.benchmarks/
+
+# Scratch scripts (development only)
+scripts/scratch/
 
 # Demo files (not part of submission)
 demo-repo-files/
