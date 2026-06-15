@@ -377,8 +377,7 @@ python -m tests.test_pipeline
 ---
 
 ## Splunk Hackathon 
-**Team Name :** UpsideDown  
-**Member :** Shreesaanth R
+**Name:** Shreesaanth R
 
 **Theme:** Platform & Developer Experience  
 
