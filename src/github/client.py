@@ -216,23 +216,36 @@ class GitHubClient:
                     # File doesn't exist — create it
                     file_sha = None
 
-            if file_sha:
-                # Update existing file
-                result = repo.update_file(
-                    path=file_path,
-                    message=commit_message,
-                    content=new_content,
-                    sha=file_sha,
-                    branch=branch,
-                )
-            else:
-                # Create new file
-                result = repo.create_file(
-                    path=file_path,
-                    message=commit_message,
-                    content=new_content,
-                    branch=branch,
-                )
+            def _do_update(sha):
+                if sha:
+                    return repo.update_file(
+                        path=file_path,
+                        message=commit_message,
+                        content=new_content,
+                        sha=sha,
+                        branch=branch,
+                    )
+                else:
+                    return repo.create_file(
+                        path=file_path,
+                        message=commit_message,
+                        content=new_content,
+                        branch=branch,
+                    )
+
+            try:
+                result = _do_update(file_sha)
+            except GithubException as sha_err:
+                if sha_err.status == 409:
+                    # SHA mismatch — re-fetch the real SHA from the branch and retry once
+                    try:
+                        current = repo.get_contents(file_path, ref=branch)
+                        file_sha = current.sha
+                    except GithubException:
+                        file_sha = None
+                    result = _do_update(file_sha)
+                else:
+                    raise
 
             return {
                 "commit_sha": result["commit"].sha,
