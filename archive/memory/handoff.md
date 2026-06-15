@@ -102,10 +102,22 @@ pytest tests/test_waste_detection.py -v
 10. **Updated `planning/README.md`** to reflect Phase 4 complete
 11. **Created `architecture_diagram.md`** with comprehensive Mermaid flowchart
 
-## Next Steps
+## Next Steps (Post 2026-06-15 Final Session)
 
-- Push final changes to GitHub.
-- Record demo video (< 3 minutes, on YouTube/Vimeo).
-- Fill out hackathon submission form.
-- Celebrate!
+- **git push origin main** — 1 commit ahead of origin (`fix: SHA mismatch retry logic`)
+- **Ensure GitHub repo is Public**
+- **Reset demo repo before recording**: `python -m scripts.reset_demo`
+- **Record demo video** (< 3 min) — follow Beat 0–6 script in planning/demo-script.md
+- **Upload to YouTube/Vimeo** (public/unlisted)
+- **Fill out hackathon submission form**
+- **Celebrate!** 🎉
+
+## Live Demo Verified (2026-06-15)
+
+Last run results verified with chrome devtools:
+- MCP: Connected (10 tools, SSE transport, GREEN)
+- Splunk: 10.4.0 healthy
+- Sourcetypes: 33 found
+- Waste: 3 sourcetypes, $11,583/month ($138,996/year)
+- PR creation: Fails only when demo not reset (expected). Reset fixes it.
 

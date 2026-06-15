@@ -286,9 +286,6 @@ splunk-zero/
 │   ├── test_github_connection.py
 │   ├── test_llm_connection.py
 │   └── test_waste_detection.py # 27 unit tests for core logic
-├── memory/                    # Context engineering (agent handoff docs)
-├── planning/                  # Architecture decisions & milestones
-├── hackathon-context/         # Hackathon rules & judging criteria
 ├── .env.example               # Environment variable template
 ├── requirements.txt           # Python dependencies
 ├── architecture_diagram.png   # Visual architecture diagram
@@ -379,12 +376,12 @@ python -m tests.test_pipeline
 
 ---
 
-## Hackathon Track
+## Splunk Hackathon 
+**Team Name :** UpsideDown  
+**Member :** Shreesaanth R
 
-**Primary:** Platform & Developer Experience  
-**Bonus:** Best Use of Splunk MCP Server
+**Theme:** Platform & Developer Experience  
 
-Splunk Zero uses Splunk's operational metadata (`_internal` for ingest metrics, `_audit` for search activity) as its evidence source. It deploys Gemini agents equipped with Splunk MCP tools to autonomously investigate data, then closes the loop by creating reviewable GitHub pull requests with cost savings evidence.
 
 ---
 
