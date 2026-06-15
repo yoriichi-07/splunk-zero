@@ -22,8 +22,7 @@ At the start of a new session, read these files in order:
 4. `planning/milestones.md` - phase boundaries.
 5. `planning/architecture.md` - system design and data flow.
 6. `planning/decisions.md` - locked technical decisions.
-7. `planning/judging-alignment.md` - why this should score well.
-8. `planning/demo-script.md` - demo narrative and judge Q&A.
+
 
 At the end of a session, update `memory/progress.md` and `memory/handoff.md`.
 

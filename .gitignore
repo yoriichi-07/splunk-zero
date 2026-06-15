@@ -1,10 +1,6 @@
 # Secrets
 .env
 
-# Internal strategy docs (not for public repo)
-hackathon-context/
-planning/judging-alignment.md
-planning/demo-script.md
 resources/
 
 # Python
